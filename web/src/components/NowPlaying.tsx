@@ -19,6 +19,7 @@ import { FavoriteButton, ModeSwitch, Scrubber, Transport } from "./Controls";
 import { IconButton } from "./IconButton";
 import { QueueList } from "./Queue";
 import { SLOT, VideoSlot } from "./Video";
+import { AlbumLink, ArtistLinks } from "./MusicLinks";
 
 /** Artwork or the live video, with a soft ambient glow from the cover behind it. */
 function Stage({ track, slot, className }: { track: Track; slot: number; className?: string }) {
@@ -79,7 +80,13 @@ function TrackHeading({ track, large = false }: { track: Track; large?: boolean 
       <div className="min-w-0 flex-1">
         <h2 className={cn("truncate font-semibold tracking-tight", large ? "text-[22px] leading-tight" : "text-lg")}>{track.title}</h2>
         <p className={cn("truncate", large ? "text-base" : "text-sm", status === "error" ? "text-danger" : "text-fg-2")}>
-          {statusText ?? [track.artist, track.album].filter(Boolean).join(" · ")}
+          {statusText ?? (
+            <>
+              <ArtistLinks track={track} />
+              {track.album && " · "}
+              <AlbumLink track={track} />
+            </>
+          )}
         </p>
       </div>
       <FavoriteButton track={track} size={large ? "lg" : "md"} />
@@ -118,7 +125,9 @@ function PanelBody({ tab, slot }: { tab: PanelTab; slot: number }) {
             <Artwork src={nextUp.thumb} className="size-10 rounded-[8px]" />
             <div className="min-w-0">
               <p className="truncate text-sm font-medium">{nextUp.title}</p>
-              <p className="truncate text-xs text-fg-2">{nextUp.artist}</p>
+              <p className="truncate text-xs text-fg-2">
+                <ArtistLinks track={nextUp} />
+              </p>
             </div>
           </div>
         </div>

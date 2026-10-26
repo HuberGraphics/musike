@@ -1,5 +1,5 @@
 import { msg } from "./i18n.js";
-import { HttpError, VIDEO_ID, type Library, type Playlist, type Track } from "./types.js";
+import { ALBUM_ID, ARTIST_ID, HttpError, VIDEO_ID, type Library, type Playlist, type Track, type TrackArtist } from "./types.js";
 
 // No Node-only imports here: the Android app runs this same module, with its own storage.
 
@@ -40,6 +40,18 @@ function persist(): Promise<void> {
 
 const str = (v: unknown, max: number) => (typeof v === "string" ? v.slice(0, max) : "");
 
+function cleanArtists(input: unknown): TrackArtist[] | undefined {
+  if (!Array.isArray(input)) return undefined;
+  const list = input.slice(0, 10).flatMap((raw): TrackArtist[] => {
+    const a = (raw ?? {}) as Record<string, unknown>;
+    const name = str(a.name, 200);
+    const id = str(a.id, 40);
+    if (!name) return [];
+    return [ARTIST_ID.test(id) ? { name, id } : { name }];
+  });
+  return list.length ? list : undefined;
+}
+
 export function sanitizeTrack(input: unknown): Track {
   const t = (input ?? {}) as Record<string, unknown>;
   const id = str(t.id, 11);
@@ -52,7 +64,9 @@ export function sanitizeTrack(input: unknown): Track {
     id,
     title: str(t.title, 300) || "Untitled",
     artist: str(t.artist, 300),
+    artists: cleanArtists(t.artists),
     album: str(t.album, 300) || undefined,
+    albumId: ALBUM_ID.test(str(t.albumId, 80)) ? str(t.albumId, 80) : undefined,
     duration: typeof t.duration === "number" && Number.isFinite(t.duration) ? Math.max(0, Math.round(t.duration)) : 0,
     thumb: url(t.thumb),
     art: url(t.art),

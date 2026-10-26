@@ -1,8 +1,8 @@
 import type { Innertube } from "youtubei.js";
 import { isLang, msg, type Lang } from "./i18n.js";
-import { sized, text, toTrack, withClient } from "./search.js";
+import { artistsOf, sized, text, toTrack, withClient } from "./search.js";
 import type { Track } from "./types.js";
-import { HttpError, VIDEO_ID } from "./types.js";
+import { ALBUM_ID, ARTIST_ID, HttpError, VIDEO_ID } from "./types.js";
 
 export interface Genre {
   /** YouTube Music's opaque "params" for the genre page. */
@@ -63,10 +63,9 @@ export interface AlbumPage {
   tracks: Track[];
 }
 
-export const ALBUM_ID = /^MPRE[\w-]{6,60}$/;
+export { ALBUM_ID, ARTIST_ID };
 
 export const GENRE_ID = /^[\w-]{8,120}={0,2}$/;
-export const ARTIST_ID = /^UC[\w-]{22}$/;
 
 const MINUTE = 60_000;
 const ARTISTS_PAGE = 40;
@@ -101,6 +100,8 @@ function shelvesOf(page: any): any[] {
 }
 
 const itemsOf = (shelf: any): any[] => shelf?.contents ?? shelf?.items ?? [];
+/** Every item of a search response: a notice ("showing results for…") can come before the results shelf. */
+const searchItems = (result: any): any[] => (Array.isArray(result?.contents) ? result.contents : []).flatMap(itemsOf);
 
 function imagesOf(item: any): { thumb: string; art: string } {
   const thumbs = item?.thumbnail?.contents ?? item?.thumbnail ?? item?.thumbnails ?? [];
@@ -372,7 +373,9 @@ const albumPage = cached(60 * MINUTE, async (key): Promise<AlbumPage> => {
         id: i.id,
         title: text(i.title) || "Untitled",
         artist: (i.artists ?? []).map((a: { name?: string }) => text(a?.name)).filter(Boolean).join(", ") || artist,
+        artists: artistsOf(i.artists).length ? artistsOf(i.artists) : artist ? [{ name: artist, ...(artistId ? { id: artistId } : {}) }] : undefined,
         album: title,
+        albumId: id,
         duration: i.duration?.seconds ?? 0,
         thumb: sized(cover.art, 120),
         art: cover.art,
@@ -395,7 +398,35 @@ const albumPage = cached(60 * MINUTE, async (key): Promise<AlbumPage> => {
 
 export const album = (id: string, lang: Lang) => albumPage(keyOf(lang, id));
 
+/**
+ * The artist page for a name, for tracks that don't know theirs (saved before Musike kept artist IDs, imported
+ * from Spotify, or plain YouTube videos): YouTube Music's best artist match, preferring the exact name.
+ */
+export async function findArtist(name: string, lang: Lang): Promise<string> {
+  const result: any = await withClient((yt) => yt.music.search(name, { type: "artist" }), lang).catch(() => {
+    throw new HttpError(502, msg("artistUnavailable"));
+  });
+  const found = searchItems(result)
+    .map((i: any) => ({ id: typeof i?.id === "string" ? i.id : "", name: text(i?.name) || text(i?.title) }))
+    .filter((a: { id: string }) => ARTIST_ID.test(a.id));
+  const same = (s: string) => s.localeCompare(name, undefined, { sensitivity: "base" }) === 0;
+  const best = found.find((a: { name: string }) => same(a.name)) ?? found[0];
+  if (!best) throw new HttpError(404, msg("artistNotFound"));
+  return best.id;
+}
+
+/** The album page for a title (and artist), for tracks that don't know theirs. */
+export async function findAlbum(title: string, artist: string, lang: Lang): Promise<string> {
+  const albums = await searchAlbums(`${title} ${artist}`.trim(), lang).catch(() => {
+    throw new HttpError(502, msg("albumUnavailable"));
+  });
+  const same = (a: string, b: string) => a.localeCompare(b, undefined, { sensitivity: "base" }) === 0;
+  const best = albums.find((a) => same(a.title, title)) ?? albums[0];
+  if (!best) throw new HttpError(404, msg("albumNotFound"));
+  return best.id;
+}
+
 export async function searchAlbums(query: string, lang: Lang): Promise<AlbumCard[]> {
   const result: any = await withClient((yt) => yt.music.search(query, { type: "album" }), lang);
-  return albumCards(itemsOf(result.contents?.[0]));
+  return albumCards(searchItems(result));
 }

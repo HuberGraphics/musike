@@ -11,6 +11,7 @@ import type { Track } from "../lib/types";
 import { usePlayer } from "../player/player";
 import { useAppearance } from "../stores/appearance";
 import { useLibrary } from "../stores/library";
+import { ArtistLinks } from "../components/MusicLinks";
 
 function Shortcut({ to, label, tracks, cover }: { to: string; label: string; tracks: Track[]; cover: ReactNode }) {
   const playList = usePlayer((s) => s.playList);
@@ -36,18 +37,21 @@ function Shortcut({ to, label, tracks, cover }: { to: string; label: string; tra
 
 function RecentCard({ track, onPlay }: { track: Track; onPlay: () => void }) {
   return (
-    <button type="button" onClick={onPlay} className="group flex w-36 shrink-0 snap-start flex-col gap-2 text-left md:w-44">
-      <span className="relative block">
+    <div className="group relative flex w-36 shrink-0 snap-start flex-col gap-2 text-left md:w-44">
+      <button type="button" onClick={onPlay} aria-label={track.title} className="absolute inset-0 z-[1] rounded-[14px]" />
+      <span className="pointer-events-none relative block">
         <Artwork src={track.art} fallback={track.thumb} className="aspect-square w-full rounded-[14px]" />
         <span className="absolute right-2 bottom-2 grid size-11 translate-y-1 place-items-center rounded-full bg-accent text-accent-ink opacity-0 shadow-[0_8px_20px_rgb(0_0_0/0.4)] transition-[opacity,transform] duration-200 ease-out-expo group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:opacity-100">
           <PlayIcon size={20} weight="fill" />
         </span>
       </span>
-      <span className="min-w-0">
+      <span className="pointer-events-none min-w-0">
         <span className="block truncate text-sm font-medium">{track.title}</span>
-        <span className="block truncate text-xs text-fg-2">{track.artist}</span>
+        <span className="block truncate text-xs text-fg-2">
+          <ArtistLinks track={track} />
+        </span>
       </span>
-    </button>
+    </div>
   );
 }
 

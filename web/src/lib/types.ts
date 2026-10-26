@@ -1,8 +1,18 @@
+/** One of a track's artists, with its YouTube Music page when known. */
+export interface TrackArtist {
+  name: string;
+  id?: string;
+}
+
 export interface Track {
   id: string;
   title: string;
+  /** Display line: every artist, comma-separated. */
   artist: string;
+  /** The same artists one by one, with their pages when known (tracks saved before 1.6 have none). */
+  artists?: TrackArtist[];
   album?: string;
+  albumId?: string;
   duration: number;
   thumb: string;
   art: string;

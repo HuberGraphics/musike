@@ -4,6 +4,7 @@ import { cn, formatTime } from "../lib/format";
 import { usePlayer } from "../player/player";
 import { Artwork } from "./Artwork";
 import { Equalizer } from "./Brand";
+import { ArtistLinks } from "./MusicLinks";
 
 export function QueueList({ compact = false }: { compact?: boolean }) {
   const t = useT();
@@ -39,7 +40,9 @@ export function QueueList({ compact = false }: { compact?: boolean }) {
         <Artwork src={track.thumb} className="pointer-events-none size-10 rounded-[8px]" />
         <div className="pointer-events-none min-w-0 flex-1">
           <p className={cn("truncate text-sm font-medium", isCurrent ? "text-accent-text" : "text-fg")}>{track.title}</p>
-          <p className="truncate text-xs text-fg-2">{track.artist}</p>
+          <p className="truncate text-xs text-fg-2">
+            <ArtistLinks track={track} />
+          </p>
         </div>
         {isCurrent ? (
           <Equalizer live={live} className="mr-2" />

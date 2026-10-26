@@ -307,6 +307,15 @@ export const en = {
     },
   },
 
+  links: {
+    goArtist: "Go to artist",
+    goAlbum: "Go to album",
+    goToArtist: (name: string) => `Go to ${name}`,
+    goToAlbum: (name: string) => `Go to the album ${name}`,
+    artistNotFound: (name: string) => `Couldn't find the artist "${name}" on YouTube Music.`,
+    albumNotFound: (name: string) => `Couldn't find the album "${name}" on YouTube Music.`,
+  },
+
   selection: {
     select: (title: string) => `Select ${title}`,
     selectAll: "Select all",

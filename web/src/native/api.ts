@@ -4,6 +4,8 @@ import {
   album as albumPage,
   ALBUM_ID,
   artist as artistPage,
+  findAlbum,
+  findArtist,
   ARTIST_ID,
   GENRE_ID,
   genre as genrePage,
@@ -82,6 +84,8 @@ export const api: MusikeApi = {
       return albumPage(id, getLang());
     }, signal),
   searchAlbums: (q, signal) => call(() => searchAlbums(q.trim().slice(0, 200), getLang()), signal),
+  findArtist: (name) => call(() => findArtist(name.trim().slice(0, 200), getLang())),
+  findAlbum: (title, artist) => call(() => findAlbum(title.trim().slice(0, 200), artist.trim().slice(0, 200), getLang())),
   videoFor: (t) => call(() => findVideoFor(t.id, t.title, t.artist, t.duration)),
   prepare: (id, signal) =>
     call(async () => {

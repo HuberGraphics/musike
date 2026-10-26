@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { createServer } from "node:net";
 import fastifyStatic from "@fastify/static";
 import Fastify from "fastify";
-import { ALBUM_ID, album, ARTIST_ID, artist, GENRE_ID, genre, genreArtists, genres, searchAlbums } from "./browse.js";
+import { ALBUM_ID, album, ARTIST_ID, artist, findAlbum, findArtist, GENRE_ID, genre, genreArtists, genres, searchAlbums } from "./browse.js";
 import { config } from "./config.js";
 import * as library from "./library.js";
 import { fileStorage } from "./libraryFile.js";
@@ -110,6 +110,17 @@ export async function startServer(opts: StartOptions = {}): Promise<RunningServe
     const { alid } = req.params as { alid: string };
     if (!ALBUM_ID.test(alid)) throw new HttpError(400, msg("invalidAlbum"));
     return album(alid, langOf(req));
+  });
+
+  /** Pages for names, for tracks that don't carry their artist's or album's ID. */
+  app.get("/api/find/artist", async (req) => {
+    const { name } = req.query as { name?: string };
+    return { id: await findArtist(query(name), langOf(req)) };
+  });
+
+  app.get("/api/find/album", async (req) => {
+    const { title, artist } = req.query as { title?: string; artist?: string };
+    return { id: await findAlbum(query(title), (artist ?? "").slice(0, 200), langOf(req)) };
   });
 
   app.get("/api/search/albums", async (req) => {

@@ -1,8 +1,8 @@
 import { Innertube } from "youtubei.js";
 import { config } from "./config.js";
 import { msg, youtubeLang, type Lang } from "./i18n.js";
-import type { Track } from "./types.js";
-import { HttpError, VIDEO_ID } from "./types.js";
+import type { Track, TrackArtist } from "./types.js";
+import { ALBUM_ID, ARTIST_ID, HttpError, VIDEO_ID } from "./types.js";
 import { ytdlpSearch } from "./ytdlp.js";
 
 // One session per language: YouTube Music words its own texts (genre names, artist bios) in the session's language.
@@ -46,6 +46,17 @@ function videoThumbs(id: string) {
   return { thumb: `https://i.ytimg.com/vi/${id}/mqdefault.jpg`, art: `https://i.ytimg.com/vi/${id}/hq720.jpg` };
 }
 
+/** A YouTube Music item's artists, with their pages when it links them. */
+export function artistsOf(list: unknown): TrackArtist[] {
+  return (Array.isArray(list) ? list : [])
+    .map((a: { name?: unknown; channel_id?: unknown }) => {
+      const name = text(a?.name);
+      const id = typeof a?.channel_id === "string" && ARTIST_ID.test(a.channel_id) ? a.channel_id : undefined;
+      return id ? { name, id } : { name };
+    })
+    .filter((a) => a.name);
+}
+
 export const text = (v: unknown): string => (v == null ? "" : typeof v === "string" ? v : String((v as { toString(): string }).toString()));
 
 // youtubei.js node shapes differ between item types, so read them defensively.
@@ -62,7 +73,9 @@ export function toTrack(item: any, kind: Track["kind"]): Track | null {
     id,
     title: text(item.title) || text(item.name),
     artist,
+    artists: artistsOf(item.artists ?? item.authors).length ? artistsOf(item.artists ?? item.authors) : undefined,
     album: item.album?.name || undefined,
+    albumId: typeof item.album?.id === "string" && ALBUM_ID.test(item.album.id) ? item.album.id : undefined,
     duration: item.duration?.seconds ?? 0,
     ...images,
     kind: isSquare ? kind : "video",

@@ -75,6 +75,10 @@ export interface MusikeApi {
   artist(id: string, signal?: AbortSignal): Promise<ArtistPage>;
   album(id: string, signal?: AbortSignal): Promise<AlbumPage>;
   searchAlbums(q: string, signal?: AbortSignal): Promise<AlbumCard[]>;
+  /** The artist page ID for a name (tracks that don't carry it). */
+  findArtist(name: string): Promise<string>;
+  /** The album page ID for a title and artist (tracks that don't carry it). */
+  findAlbum(title: string, artist: string): Promise<string>;
   /** The music video matching a song, or null when YouTube has none. */
   videoFor(t: Track): Promise<Track | null>;
   prepare(id: string, signal?: AbortSignal): Promise<Prepared>;

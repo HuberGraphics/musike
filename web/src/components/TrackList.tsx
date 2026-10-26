@@ -9,6 +9,7 @@ import { useLibrary } from "../stores/library";
 import { useUi } from "../stores/ui";
 import { Artwork } from "./Artwork";
 import { Equalizer } from "./Brand";
+import { AlbumLink, ArtistLinks } from "./MusicLinks";
 
 interface RowProps {
   track: Track;
@@ -70,11 +71,15 @@ const TrackRow = memo(function TrackRow({ track, position, onPlay, playlistId, s
         </p>
         <p className="mt-0.5 flex items-center gap-1.5 truncate text-[13px] text-fg-2">
           {track.kind === "video" && <VideoCameraIcon size={13} className="shrink-0 text-fg-3" aria-label={t.common.video} />}
-          <span className="truncate">{track.artist || t.common.youtube}</span>
+          <ArtistLinks track={track} fallback={t.common.youtube} className="truncate" />
         </p>
       </div>
 
-      {showAlbum && <p className="pointer-events-none hidden truncate text-sm text-fg-2 lg:block">{track.album ?? ""}</p>}
+      {showAlbum && (
+        <p className="pointer-events-none hidden truncate text-sm text-fg-2 lg:block">
+          <AlbumLink track={track} />
+        </p>
+      )}
 
       <div className="relative z-10 hidden items-center gap-1 md:flex">
         <button

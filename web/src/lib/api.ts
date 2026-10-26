@@ -49,6 +49,10 @@ export const api: MusikeApi = {
   album: (id: string, signal?: AbortSignal) => request<AlbumPage>(`/api/albums/${encodeURIComponent(id)}`, { signal }),
   searchAlbums: (q: string, signal?: AbortSignal) =>
     request<{ albums: AlbumCard[] }>(`/api/search/albums?q=${encodeURIComponent(q)}`, { signal }).then((r) => r.albums),
+  findArtist: (name: string) =>
+    request<{ id: string }>(`/api/find/artist?name=${encodeURIComponent(name)}`).then((r) => r.id),
+  findAlbum: (title: string, artist: string) =>
+    request<{ id: string }>(`/api/find/album?${new URLSearchParams({ title, artist })}`).then((r) => r.id),
   /** The music video matching a song, or null when YouTube has none. */
   videoFor: (t: Track) =>
     request<{ track: Track | null }>(

@@ -301,6 +301,15 @@ export const pt: Messages = {
     },
   },
 
+  links: {
+    goArtist: "Ir para o artista",
+    goAlbum: "Ir para o álbum",
+    goToArtist: (name) => `Ir para ${name}`,
+    goToAlbum: (name) => `Ir para o álbum ${name}`,
+    artistNotFound: (name) => `Não encontramos o artista "${name}" no YouTube Music.`,
+    albumNotFound: (name) => `Não encontramos o álbum "${name}" no YouTube Music.`,
+  },
+
   selection: {
     select: (title) => `Selecionar ${title}`,
     selectAll: "Selecionar todas",

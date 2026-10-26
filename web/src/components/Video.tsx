@@ -10,6 +10,7 @@ import { selectCurrent, usePlayer, useStatusText, videoEl } from "../player/play
 import { useUi } from "../stores/ui";
 import { FavoriteButton, Scrubber, Transport, Volume } from "./Controls";
 import { IconButton } from "./IconButton";
+import { ArtistLinks } from "./MusicLinks";
 
 /**
  * One <video> element serves every place video can appear. It is re-parented into the highest-priority
@@ -232,7 +233,7 @@ export function Theater() {
             <div className="pointer-events-auto flex items-start gap-3 pt-3">
               <div className="min-w-0 flex-1 text-white">
                 <p className="truncate text-lg font-semibold tracking-tight md:text-xl">{track.title}</p>
-                <p className="truncate text-sm text-white/70">{statusText ?? track.artist}</p>
+                <p className="truncate text-sm text-white/70">{statusText ?? <ArtistLinks track={track} />}</p>
               </div>
               <IconButton
                 label={fullscreen ? t.video.exitFullscreen : t.video.fullscreen}

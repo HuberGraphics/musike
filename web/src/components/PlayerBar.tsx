@@ -6,6 +6,7 @@ import { useUi } from "../stores/ui";
 import { Artwork } from "./Artwork";
 import { FavoriteButton, ModeSwitch, Scrubber, Transport, Volume } from "./Controls";
 import { IconButton } from "./IconButton";
+import { ArtistLinks } from "./MusicLinks";
 
 /** Desktop and tablet player: a pane along the bottom of the window. */
 export function PlayerBar() {
@@ -35,7 +36,7 @@ export function PlayerBar() {
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{track.title}</p>
                 <p className={cn("truncate text-[13px]", status === "error" ? "text-danger" : "text-fg-2")}>
-                  {statusText ?? track.artist}
+                  {statusText ?? <ArtistLinks track={track} />}
                 </p>
               </div>
               <FavoriteButton track={track} size="sm" />

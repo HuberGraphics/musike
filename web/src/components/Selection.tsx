@@ -8,6 +8,7 @@ import { useLibrary } from "../stores/library";
 import { useUi } from "../stores/ui";
 import { Artwork } from "./Artwork";
 import { Equalizer } from "./Brand";
+import { ArtistLinks } from "./MusicLinks";
 
 export function Check({ on }: { on: boolean }) {
   return (
@@ -188,16 +189,20 @@ export function SelectableRow({
         </span>
       </button>
 
-      <button type="button" onClick={onToggle} className={cn("min-w-0 flex-1 text-left", !selected && "opacity-60")}>
-        <span className={cn("block truncate text-[15px] leading-tight font-medium", isCurrent && "text-accent-text")}>{track.title}</span>
-        <span className="mt-0.5 flex items-center gap-1.5 text-[13px] text-fg-2">
+      {/* The title (and the free space around the artist) toggles the selection; the artist names open their pages. */}
+      <div className={cn("relative min-w-0 flex-1", !selected && "opacity-60")}>
+        <button type="button" onClick={onToggle} aria-label={t.selection.select(track.title)} className="absolute inset-0" />
+        <span className={cn("pointer-events-none block truncate text-[15px] leading-tight font-medium", isCurrent && "text-accent-text")}>
+          {track.title}
+        </span>
+        <span className="pointer-events-none mt-0.5 flex items-center gap-1.5 text-[13px] text-fg-2">
           {track.kind === "video" && <VideoCameraIcon size={13} className="shrink-0 text-fg-3" aria-label={t.common.video} />}
           <span className="truncate">
-            {track.artist || t.common.youtube}
+            <ArtistLinks track={track} fallback={t.common.youtube} />
             {note}
           </span>
         </span>
-      </button>
+      </div>
 
       {isFavorite && <HeartIcon size={15} weight="fill" className="shrink-0 text-accent-text" aria-label={t.common.inFavorites} />}
 

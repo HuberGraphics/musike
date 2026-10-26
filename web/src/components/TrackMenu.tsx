@@ -1,5 +1,7 @@
 import {
   ArrowSquareOutIcon,
+  MicrophoneStageIcon,
+  VinylRecordIcon,
   HeartIcon,
   ListPlusIcon,
   PlayIcon,
@@ -18,6 +20,7 @@ import { usePlayer } from "../player/player";
 import { useLibrary } from "../stores/library";
 import { useUi } from "../stores/ui";
 import { Artwork } from "./Artwork";
+import { trackArtists, useGoTo } from "./MusicLinks";
 
 function Item({ icon, children, onClick, danger }: { icon: ReactNode; children: ReactNode; onClick: () => void; danger?: boolean }) {
   return (
@@ -46,6 +49,7 @@ export function TrackMenu() {
   const box = useRef<HTMLDivElement>(null);
   const t = useT();
   const [pos, setPos] = useState({ left: 0, top: 0 });
+  const go = useGoTo();
 
   useLayoutEffect(() => {
     if (!menu || !isMd || !box.current) return;
@@ -106,6 +110,18 @@ export function TrackMenu() {
         </Item>
       )}
       <div className="mx-3 my-1 h-px bg-line" />
+      {trackArtists(menu.track)
+        .slice(0, 3)
+        .map((a, i, all) => (
+          <Item key={`${a.name}-${i}`} icon={<MicrophoneStageIcon size={18} />} onClick={run(() => void go.artist(a))}>
+            <span className="truncate">{all.length > 1 ? t.links.goToArtist(a.name) : t.links.goArtist}</span>
+          </Item>
+        ))}
+      {menu.track.album && (
+        <Item icon={<VinylRecordIcon size={18} />} onClick={run(() => void go.album(menu.track))}>
+          {t.links.goAlbum}
+        </Item>
+      )}
       <Item
         icon={<ArrowSquareOutIcon size={18} />}
         onClick={run(() => window.open(`https://www.youtube.com/watch?v=${menu.track.id}`, "_blank", "noopener"))}
