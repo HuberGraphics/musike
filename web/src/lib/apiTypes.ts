@@ -97,6 +97,8 @@ export interface MusikeApi {
   deletePlaylist(id: string): Promise<void>;
   addToPlaylist(id: string, t: Track | Track[]): Promise<Playlist>;
   removeFromPlaylist(id: string, trackId: string): Promise<Playlist>;
+  /** Saves a new track order (track IDs). */
+  reorderPlaylist(id: string, ids: string[]): Promise<Playlist>;
   importLibrary(backup: unknown, mode: "merge" | "replace"): Promise<ImportResult>;
 
   system(): Promise<SystemInfo>;

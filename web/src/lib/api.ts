@@ -81,6 +81,7 @@ export const api: MusikeApi = {
     request<Playlist>(`/api/playlists/${id}/tracks`, { method: "POST", json: Array.isArray(t) ? { tracks: t } : t }),
   removeFromPlaylist: (id: string, trackId: string) =>
     request<Playlist>(`/api/playlists/${id}/tracks/${trackId}`, { method: "DELETE" }),
+  reorderPlaylist: (id: string, ids: string[]) => request<Playlist>(`/api/playlists/${id}/order`, { method: "PUT", json: { ids } }),
 
   importLibrary: (backup: unknown, mode: "merge" | "replace") =>
     request<ImportResult>("/api/library/import", { method: "POST", json: { backup, mode } }),

@@ -73,6 +73,8 @@ Musike started from the idea behind the old Discord music bots: a server that fe
 
 **Library**
 - Playlists, Favorites and recently played history
+- **Arrange playlists:** drag tracks into a new order (or move them with the arrow keys), or sort by title, artist or recently added. Covers are a mosaic of the playlist's album art
+- Adding a track that's already in a playlist says so instead of adding it twice
 - Select many tracks at once to play, favorite or add to a playlist
 - **Backup to a file** to move everything to another Musike: merge or replace, with a preview before importing
 

@@ -120,7 +120,8 @@ export async function createPlaylist(name: string, tracks: Track[] = []): Promis
   const clean = name.trim().slice(0, 80);
   if (!clean) throw new HttpError(400, msg("playlistNameRequired"));
   const now = Date.now();
-  const playlist: Playlist = { id: randomUUID(), name: clean, createdAt: now, updatedAt: now, tracks };
+  const added = Object.fromEntries(tracks.map((t) => [t.id, now]));
+  const playlist: Playlist = { id: randomUUID(), name: clean, createdAt: now, updatedAt: now, tracks, added };
   lib.playlists.unshift(playlist);
   await persist();
   return playlist;
@@ -147,10 +148,14 @@ export async function deletePlaylist(pid: string): Promise<void> {
 export async function addToPlaylist(pid: string, tracks: Track | Track[]): Promise<Playlist> {
   const lib = await load();
   const p = findPlaylist(lib, pid);
+  const now = Date.now();
+  p.added ??= {};
   for (const track of Array.isArray(tracks) ? tracks : [tracks]) {
-    if (!p.tracks.some((t) => t.id === track.id)) p.tracks.push(track);
+    if (p.tracks.some((t) => t.id === track.id)) continue;
+    p.tracks.push(track);
+    p.added[track.id] = now;
   }
-  p.updatedAt = Date.now();
+  p.updatedAt = now;
   await persist();
   return p;
 }
@@ -159,6 +164,29 @@ export async function removeFromPlaylist(pid: string, trackId: string): Promise<
   const lib = await load();
   const p = findPlaylist(lib, pid);
   p.tracks = p.tracks.filter((t) => t.id !== trackId);
+  if (p.added) delete p.added[trackId];
+  p.updatedAt = Date.now();
+  await persist();
+  return p;
+}
+
+/**
+ * Puts the tracks in the given order (track IDs). IDs it doesn't have are ignored, and tracks the list
+ * leaves out (added from another device meanwhile) keep their place at the end.
+ */
+export async function reorderPlaylist(pid: string, ids: unknown): Promise<Playlist> {
+  const lib = await load();
+  const p = findPlaylist(lib, pid);
+  if (!Array.isArray(ids)) throw new HttpError(400, msg("tracksRequired"));
+  const byId = new Map(p.tracks.map((t) => [t.id, t]));
+  const ordered: Track[] = [];
+  for (const id of ids) {
+    const t = typeof id === "string" ? byId.get(id) : undefined;
+    if (!t) continue;
+    ordered.push(t);
+    byId.delete(id as string);
+  }
+  p.tracks = [...ordered, ...byId.values()];
   p.updatedAt = Date.now();
   await persist();
   return p;
@@ -188,6 +216,18 @@ function cleanTracks(input: unknown, limit = MAX_TRACKS): Track[] {
   return out;
 }
 
+/** The "added" times of an untrusted playlist, only for tracks it really has. */
+function cleanAdded(input: unknown, tracks: Track[]): Record<string, number> | undefined {
+  if (!input || typeof input !== "object") return undefined;
+  const raw = input as Record<string, unknown>;
+  const out: Record<string, number> = {};
+  for (const t of tracks) {
+    const v = raw[t.id];
+    if (typeof v === "number" && Number.isFinite(v) && v > 0) out[t.id] = v;
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
 function cleanLibrary(input: unknown): Library {
   const lib = (input ?? {}) as Record<string, unknown>;
   const playlists = (Array.isArray(lib.playlists) ? lib.playlists : []).slice(0, MAX_PLAYLISTS).flatMap((raw): Playlist[] => {
@@ -197,7 +237,8 @@ function cleanLibrary(input: unknown): Library {
     const now = Date.now();
     const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : now);
     const id = str(p.id, 64);
-    return [{ id: /^[\w-]{8,64}$/.test(id) ? id : randomUUID(), name, createdAt: num(p.createdAt), updatedAt: num(p.updatedAt), tracks: cleanTracks(p.tracks) }];
+    const tracks = cleanTracks(p.tracks);
+    return [{ id: /^[\w-]{8,64}$/.test(id) ? id : randomUUID(), name, createdAt: num(p.createdAt), updatedAt: num(p.updatedAt), tracks, added: cleanAdded(p.added, tracks) }];
   });
   return { favorites: cleanTracks(lib.favorites), playlists, history: cleanTracks(lib.history, HISTORY_LIMIT) };
 }
@@ -242,9 +283,14 @@ export async function importLibrary(input: unknown, mode: "merge" | "replace"): 
       lib.playlists.find((x) => x.id === p.id) ??
       lib.playlists.find((x) => x.name.toLocaleLowerCase("pt-BR") === p.name.toLocaleLowerCase("pt-BR"));
     if (match) {
+      const had = new Set(match.tracks.map((t) => t.id));
       const merged = union(match.tracks, p.tracks);
       if (!merged.added) continue; // already had every track: nothing changed
       match.tracks = merged.list.slice(0, MAX_TRACKS);
+      // Tracks new to this playlist keep the time they were added in the backup, or count as added now.
+      const now = Date.now();
+      match.added ??= {};
+      for (const t of match.tracks) if (!had.has(t.id)) match.added[t.id] = p.added?.[t.id] ?? now;
       match.updatedAt = Date.now();
       result.tracksAdded += merged.added;
       result.playlistsMerged++;

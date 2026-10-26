@@ -76,6 +76,8 @@ export const en = {
   },
 
   collection: {
+    sortBy: "Sort by",
+    sort: { custom: "Custom order", title: "Title", artist: "Artist", added: "Recently added" },
     labelPlaylist: "Playlist",
     labelFavorites: "Collection",
     labelHistory: "History",
@@ -106,6 +108,9 @@ export const en = {
     name: "Name",
     namePlaceholder: "E.g. Workout, Focus, Road trip",
     createAndAdd: "Create and add",
+    alreadyInPlaylist: "Already in this playlist",
+    allAlreadyInPlaylist: "Already has all of them",
+    someAlreadyIn: (n: number, total: number) => `${n} of ${total} already here, they'll be skipped`,
     shortcutsTitle: "Keyboard shortcuts",
     space: "Space",
     shortcuts: {
@@ -225,6 +230,8 @@ export const en = {
     title: "Title",
     album: "Album",
     duration: "Duration",
+    moveX: (title: string) => `Move ${title} (drag, or use the arrow keys)`,
+    dragToMove: "Drag to move",
   },
 
   search: {
@@ -479,6 +486,9 @@ export const en = {
     addedTo: (name: string) => `Added to "${name}"`,
     addedManyTo: (n: number, name: string) => `${n} tracks added to "${name}"`,
     allAlreadyIn: (name: string) => `They were all in "${name}" already`,
+    alreadyIn: (name: string) => `Already in "${name}"`,
+    addedSkipping: (n: number, skipped: number, name: string) =>
+      `${n} ${n === 1 ? "track" : "tracks"} added to "${name}" · ${skipped} ${skipped === 1 ? "was" : "were"} already there`,
     ytdlpMissing: "yt-dlp wasn't found. No song plays without it.",
     ytdlpUpdate: (version: string) => `New yt-dlp version available (${version})`,
   },

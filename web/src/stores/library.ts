@@ -16,6 +16,7 @@ interface LibraryState extends Library {
   deletePlaylist: (id: string) => Promise<void>;
   addToPlaylist: (id: string, t: Track | Track[]) => Promise<void>;
   removeFromPlaylist: (id: string, trackId: string) => Promise<void>;
+  reorderPlaylist: (id: string, tracks: Track[]) => Promise<void>;
 }
 
 const replacePlaylist = (list: Playlist[], p: Playlist) => list.map((x) => (x.id === p.id ? p : x));
@@ -108,14 +109,30 @@ export const useLibrary = create<LibraryState>((set, get) => ({
 
   addToPlaylist: async (id, tracks) => {
     try {
+      const list = Array.isArray(tracks) ? tracks : [tracks];
       const before = get().playlists.find((p) => p.id === id)?.tracks.length ?? 0;
       const p = await api.addToPlaylist(id, tracks);
       set((s) => ({ playlists: replacePlaylist(s.playlists, p) }));
       const added = p.tracks.length - before;
+      const skipped = new Set(list.map((x) => x.id)).size - added;
       const t = getT();
-      if (!Array.isArray(tracks) || added === 1) toast(t.toasts.addedTo(p.name));
-      else toast(added ? t.toasts.addedManyTo(added, p.name) : t.toasts.allAlreadyIn(p.name));
+      if (!added) toast(list.length === 1 ? t.toasts.alreadyIn(p.name) : t.toasts.allAlreadyIn(p.name));
+      else if (!skipped) toast(added === 1 ? t.toasts.addedTo(p.name) : t.toasts.addedManyTo(added, p.name));
+      else toast(t.toasts.addedSkipping(added, skipped, p.name));
     } catch (e) {
+      toast((e as Error).message, "error");
+    }
+  },
+
+  reorderPlaylist: async (id, tracks) => {
+    const prev = get().playlists;
+    // Optimistic: the row stays where it was dropped.
+    set({ playlists: prev.map((p) => (p.id === id ? { ...p, tracks } : p)) });
+    try {
+      const p = await api.reorderPlaylist(id, tracks.map((t) => t.id));
+      set((s) => ({ playlists: replacePlaylist(s.playlists, p) }));
+    } catch (e) {
+      set({ playlists: prev });
       toast((e as Error).message, "error");
     }
   },

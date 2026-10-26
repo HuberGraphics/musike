@@ -71,6 +71,8 @@ export const pt: Messages = {
   },
 
   collection: {
+    sortBy: "Ordenar por",
+    sort: { custom: "Ordem personalizada", title: "Título", artist: "Artista", added: "Adicionadas recentemente" },
     labelPlaylist: "Playlist",
     labelFavorites: "Coleção",
     labelHistory: "Histórico",
@@ -100,6 +102,9 @@ export const pt: Messages = {
     name: "Nome",
     namePlaceholder: "Ex.: Treino, Foco, Estrada",
     createAndAdd: "Criar e adicionar",
+    alreadyInPlaylist: "Já está nesta playlist",
+    allAlreadyInPlaylist: "Já tem todas",
+    someAlreadyIn: (n, total) => `${n} de ${total} já estão aqui e serão puladas`,
     shortcutsTitle: "Atalhos de teclado",
     space: "Espaço",
     shortcuts: {
@@ -219,6 +224,8 @@ export const pt: Messages = {
     title: "Título",
     album: "Álbum",
     duration: "Duração",
+    moveX: (title) => `Mover ${title} (arraste ou use as setas)`,
+    dragToMove: "Arraste para mover",
   },
 
   search: {
@@ -473,6 +480,9 @@ export const pt: Messages = {
     addedTo: (name) => `Adicionada a "${name}"`,
     addedManyTo: (n, name) => `${n} faixas adicionadas a "${name}"`,
     allAlreadyIn: (name) => `Já estavam todas em "${name}"`,
+    alreadyIn: (name) => `Já está em "${name}"`,
+    addedSkipping: (n, skipped, name) =>
+      `${n} ${n === 1 ? "faixa adicionada" : "faixas adicionadas"} a "${name}" · ${skipped} ${skipped === 1 ? "já estava" : "já estavam"} lá`,
     ytdlpMissing: "O yt-dlp não foi encontrado. Sem ele nenhuma música toca.",
     ytdlpUpdate: (version) => `Nova versão do yt-dlp disponível (${version})`,
   },

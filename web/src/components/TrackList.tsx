@@ -1,5 +1,6 @@
-import { ClockIcon, DotsThreeIcon, HeartIcon, VideoCameraIcon } from "@phosphor-icons/react";
-import { memo, type MouseEvent } from "react";
+import { ClockIcon, DotsSixVerticalIcon, DotsThreeIcon, HeartIcon, VideoCameraIcon } from "@phosphor-icons/react";
+import { Reorder, useDragControls, type DragControls } from "motion/react";
+import { memo, useEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from "react";
 import { useT } from "../i18n";
 import { cn, formatTime } from "../lib/format";
 import type { Track } from "../lib/types";
@@ -11,21 +12,69 @@ import { Artwork } from "./Artwork";
 import { Equalizer } from "./Brand";
 import { AlbumLink, ArtistLinks } from "./MusicLinks";
 
+/** What a row needs to be dragged into a new place (playlists in their own order). */
+interface Reorderable {
+  /** Saves the order the drag left. */
+  onDrop: () => void;
+  /** Moves the row one place up (-1) or down (1), for keyboards. */
+  onMove: (track: Track, by: -1 | 1) => void;
+}
+
 interface RowProps {
   track: Track;
   position: number;
   onPlay: () => void;
   playlistId?: string;
   showAlbum: boolean;
+  reorder?: Reorderable;
 }
 
-const TrackRow = memo(function TrackRow({ track, position, onPlay, playlistId, showAlbum }: RowProps) {
+/** A plain list item, or one that can be dragged when the list is being reordered. */
+function RowRoot({ track, reorder, controls, ...props }: { track: Track; reorder?: Reorderable; controls: DragControls; className: string; onContextMenu: (e: MouseEvent) => void; children: ReactNode }) {
+  if (!reorder) return <li {...props} />;
+  return (
+    <Reorder.Item
+      as="li"
+      value={track}
+      dragListener={false}
+      dragControls={controls}
+      onDragEnd={reorder.onDrop}
+      whileDrag={{ scale: 1.01, boxShadow: "0 12px 32px rgb(0 0 0 / 0.35)", zIndex: 20 }}
+      style={{ position: "relative" }}
+      {...props}
+    />
+  );
+}
+
+const TrackRow = memo(function TrackRow({ track, position, onPlay, playlistId, showAlbum, reorder }: RowProps) {
   const isCurrent = usePlayer((s) => selectCurrent(s)?.id === track.id);
   const isPlaying = usePlayer((s) => s.status === "playing" || s.status === "loading");
   const isFavorite = useLibrary((s) => s.favorites.some((t) => t.id === track.id));
   const toggleFavorite = useLibrary((s) => s.toggleFavorite);
   const openMenu = useUi((s) => s.openMenu);
+  const controls = useDragControls();
   const t = useT();
+
+  const grab = (e: PointerEvent) => {
+    e.preventDefault();
+    controls.start(e);
+  };
+  const nudge = (e: KeyboardEvent) => {
+    if (!reorder || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
+    e.preventDefault();
+    e.stopPropagation();
+    reorder.onMove(track, e.key === "ArrowUp" ? -1 : 1);
+  };
+  // The grip: on its own on phones, in place of the number on larger screens.
+  const handleProps = reorder && {
+    role: "button" as const,
+    tabIndex: 0,
+    "aria-label": t.trackList.moveX(track.title),
+    title: t.trackList.dragToMove,
+    onPointerDown: grab,
+    onKeyDown: nudge,
+    "data-track-handle": track.id,
+  };
 
   const menuAt = (e: MouseEvent) => {
     e.preventDefault();
@@ -36,13 +85,18 @@ const TrackRow = memo(function TrackRow({ track, position, onPlay, playlistId, s
   };
 
   return (
-    <li
+    <RowRoot
+      track={track}
+      reorder={reorder}
+      controls={controls}
       onContextMenu={menuAt}
       className={cn(
         "group relative grid items-center gap-3 rounded-xl px-2 py-1.5 transition-colors duration-150 hover:bg-surface-2 md:px-3",
+        // Opaque while it can be dragged, so the rows it passes over don't show through.
+        reorder ? "grid-cols-[24px_auto_1fr_auto] bg-bg" : "grid-cols-[auto_1fr_auto]",
         showAlbum
-          ? "grid-cols-[auto_1fr_auto] md:grid-cols-[28px_auto_1fr_auto_auto] lg:grid-cols-[28px_auto_minmax(0,1.4fr)_minmax(0,1fr)_auto_auto]"
-          : "grid-cols-[auto_1fr_auto] md:grid-cols-[28px_auto_1fr_auto_auto]",
+          ? "md:grid-cols-[28px_auto_1fr_auto_auto] lg:grid-cols-[28px_auto_minmax(0,1.4fr)_minmax(0,1fr)_auto_auto]"
+          : "md:grid-cols-[28px_auto_1fr_auto_auto]",
       )}
     >
       <button
@@ -52,9 +106,25 @@ const TrackRow = memo(function TrackRow({ track, position, onPlay, playlistId, s
         className="absolute inset-0 rounded-xl focus-visible:outline-offset-[-2px]"
       />
 
-      <span className="pointer-events-none hidden justify-center font-mono text-[13px] text-fg-3 tabular-nums md:flex">
-        {isCurrent ? <Equalizer live={isPlaying} /> : position + 1}
-      </span>
+      {handleProps && (
+        <span {...handleProps} className="relative z-10 -ml-1 grid h-11 cursor-grab touch-none place-items-center text-fg-3 md:hidden">
+          <DotsSixVerticalIcon size={20} weight="bold" />
+        </span>
+      )}
+
+      {handleProps ? (
+        <span
+          {...handleProps}
+          className="relative z-10 hidden h-9 cursor-grab touch-none items-center justify-center rounded-md font-mono text-[13px] text-fg-3 tabular-nums hover:text-fg active:cursor-grabbing md:flex"
+        >
+          <span className="group-hover:hidden group-focus-within:hidden">{isCurrent ? <Equalizer live={isPlaying} /> : position + 1}</span>
+          <DotsSixVerticalIcon size={18} weight="bold" className="hidden group-hover:block group-focus-within:block" />
+        </span>
+      ) : (
+        <span className="pointer-events-none hidden justify-center font-mono text-[13px] text-fg-3 tabular-nums md:flex">
+          {isCurrent ? <Equalizer live={isPlaying} /> : position + 1}
+        </span>
+      )}
 
       <div className="pointer-events-none relative">
         <Artwork src={track.thumb} className="size-11 rounded-[10px]" />
@@ -108,7 +178,7 @@ const TrackRow = memo(function TrackRow({ track, position, onPlay, playlistId, s
       >
         <DotsThreeIcon size={22} weight="bold" />
       </button>
-    </li>
+    </RowRoot>
   );
 });
 
@@ -119,13 +189,59 @@ interface ListProps {
   playlistId?: string;
   showAlbum?: boolean;
   header?: boolean;
+  /** Lets the rows be dragged (or moved with the arrow keys) into a new order, saved through this. */
+  onReorder?: (tracks: Track[]) => void;
 }
 
-export function TrackList({ tracks, context, playlistId, showAlbum: albumWanted = true, header = true }: ListProps) {
+export function TrackList({ tracks, context, playlistId, showAlbum: albumWanted = true, header = true, onReorder }: ListProps) {
   const playList = usePlayer((s) => s.playList);
   const t = useT();
   // Pages ask for the album column where it makes sense; Settings can turn it off everywhere.
   const showAlbum = useAppearance((s) => s.albumColumn) && albumWanted;
+
+  // While dragging, the order lives here; it's saved once the row is dropped.
+  const tracksRef = useRef(tracks);
+  tracksRef.current = tracks;
+  const [order, setOrder] = useState(tracks);
+  const orderRef = useRef(tracks);
+  const saveRef = useRef(onReorder);
+  saveRef.current = onReorder;
+  useEffect(() => {
+    orderRef.current = tracks;
+    setOrder(tracks);
+  }, [tracks]);
+  const [reorder] = useState<Reorderable>(() => ({
+    onDrop: () => {
+      const next = orderRef.current;
+      if (next.some((x, i) => x !== tracksRef.current[i])) saveRef.current?.(next);
+    },
+    onMove: (track, by) => {
+      const list = [...orderRef.current];
+      const from = list.indexOf(track);
+      const to = from + by;
+      if (from < 0 || to < 0 || to >= list.length) return;
+      list.splice(to, 0, ...list.splice(from, 1));
+      orderRef.current = list;
+      setOrder(list);
+      saveRef.current?.(list);
+      // Keep the keyboard on the row that moved.
+      requestAnimationFrame(() =>
+        [...document.querySelectorAll<HTMLElement>(`[data-track-handle="${track.id}"]`)].find((h) => h.offsetParent)?.focus(),
+      );
+    },
+  }));
+  const shown = onReorder ? order : tracks;
+  const rows = shown.map((t, i) => (
+    <TrackRow
+      key={onReorder ? t.id : `${t.id}-${i}`}
+      track={t}
+      position={i}
+      playlistId={playlistId}
+      showAlbum={showAlbum}
+      reorder={onReorder ? reorder : undefined}
+      onPlay={() => playList(context ?? shown, i)}
+    />
+  ));
   return (
     <div>
       {header && (
@@ -147,18 +263,22 @@ export function TrackList({ tracks, context, playlistId, showAlbum: albumWanted 
           <span className="w-9" />
         </div>
       )}
-      <ul className="flex flex-col">
-        {tracks.map((t, i) => (
-          <TrackRow
-            key={`${t.id}-${i}`}
-            track={t}
-            position={i}
-            playlistId={playlistId}
-            showAlbum={showAlbum}
-            onPlay={() => playList(context ?? tracks, i)}
-          />
-        ))}
-      </ul>
+      {onReorder ? (
+        <Reorder.Group
+          as="ul"
+          axis="y"
+          values={order}
+          onReorder={(next: Track[]) => {
+            orderRef.current = next;
+            setOrder(next);
+          }}
+          className="flex flex-col"
+        >
+          {rows}
+        </Reorder.Group>
+      ) : (
+        <ul className="flex flex-col">{rows}</ul>
+      )}
     </div>
   );
 }

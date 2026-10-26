@@ -17,7 +17,7 @@ import { useAppearance } from "../stores/appearance";
 import { useLibrary } from "../stores/library";
 import { needsAttention, useSystem } from "../stores/system";
 import { useUi } from "../stores/ui";
-import { Artwork } from "./Artwork";
+import { Cover } from "./Cover";
 import { Logo, LogoMark } from "./Brand";
 import { NamePlaylistDialog } from "./Dialogs";
 
@@ -173,7 +173,7 @@ export function Rail() {
           </RailLink>
           {sidebarPlaylists && playlists.map((p) => (
             <RailLink key={p.id} to={paths.playlist(p.id)} label={p.name} sub={t.common.tracks(p.tracks.length)}>
-              <Artwork src={p.tracks[0]?.thumb} className="size-full" iconSize={18} />
+              <Cover kind="playlist" tracks={p.tracks} className="size-full" iconSize={18} />
             </RailLink>
           ))}
         </div>

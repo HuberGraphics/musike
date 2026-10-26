@@ -25,6 +25,8 @@ export interface Playlist {
   createdAt: number;
   updatedAt: number;
   tracks: Track[];
+  /** When each track was added, by track ID (playlists from before 1.6 have none, or only for newer tracks). */
+  added?: Record<string, number>;
 }
 
 export interface Library {
