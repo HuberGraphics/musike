@@ -128,7 +128,7 @@
 
   /* Docked pane (sidebar, player bar, Now Playing): flat against the window, split from the content by hairlines. */
   .pane {
-    background: var(--surface-1);
+    background: var(--bg);
   }
 
   /* The night sky behind the sidebar's brand, after T3 Code's header. */
