@@ -10,7 +10,7 @@ import {
   type SystemJob,
   type SystemMedia,
 } from "./apiTypes";
-import type { AlbumCard, AlbumPage, ArtistPage, Genre, GenreArtist, GenrePage, Library, Playlist, Track } from "./types";
+import type { AlbumCard, AlbumPage, ArtistPage, Genre, GenreArtist, GenrePage, Library, Playlist, SpotifyKind, SpotifyList, Track } from "./types";
 
 // The HTTP backend: the Musike server (web app, desktop app). The Android build swaps this module for native/api.ts.
 export * from "./apiTypes";
@@ -59,6 +59,8 @@ export const api: MusikeApi = {
       method: "POST",
       signal,
     }),
+  spotify: (kind: SpotifyKind, id: string, signal?: AbortSignal) =>
+    request<SpotifyList>(`/api/spotify/${kind}/${encodeURIComponent(id)}`, { signal }),
 
   library: () => request<Library>("/api/library"),
   addFavorite: (t: Track) => request<{ favorites: Track[] }>(`/api/favorites/${t.id}`, { method: "PUT", json: t }),
@@ -98,8 +100,11 @@ export async function saveFile(name: string, text: string) {
 /** Only the Android app needs its own bridge to the system's media controls. */
 export const systemMedia: SystemMedia | null = null;
 
-/** What this build can do. The Android build has no video yet, no yt-dlp to manage, and retries expired streams. */
-export const capabilities = { video: true, engineSettings: true, retryOnError: false };
+/**
+ * What this build can do. The Android build has no video yet, no yt-dlp to manage, retries expired streams, and
+ * can't log in to Spotify (its web view's address isn't one Spotify accepts as a redirect).
+ */
+export const capabilities = { video: true, engineSettings: true, retryOnError: false, spotifyLogin: true };
 
 /** Media elements hide the HTTP error body; fetch it to show the real reason. */
 export async function explainStreamError(url: string): Promise<{ message: string; code?: ErrorCode }> {

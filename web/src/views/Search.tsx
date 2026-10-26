@@ -6,6 +6,7 @@ import {
   ListBulletsIcon,
   MagnifyingGlassIcon,
   PlayIcon,
+  SpotifyLogoIcon,
   WarningCircleIcon,
   XIcon,
 } from "@phosphor-icons/react";
@@ -21,6 +22,7 @@ import { api } from "../lib/api";
 import { useT } from "../i18n";
 import { cn } from "../lib/format";
 import { paths } from "../lib/routes";
+import { parseSpotifyLink } from "../lib/spotify";
 import type { AlbumCard, Track } from "../lib/types";
 import { usePlayer } from "../player/player";
 import { parseList } from "./BatchSearch";
@@ -81,6 +83,7 @@ export default function Search() {
   const playTrack = usePlayer((s) => s.playTrack);
 
   const linkId = videoIdFromUrl(text);
+  const spotifyLink = parseSpotifyLink(text);
   // "a, b, c" probably means three songs; offer to search each one (titles can have commas, so only offer).
   const listTerms = linkId || !text.includes(",") ? [] : parseList(text);
 
@@ -102,7 +105,8 @@ export default function Search() {
 
   // Search as you type, debounced.
   useEffect(() => {
-    if (linkId || text.trim() === q) return;
+    // A Spotify link isn't something to search for: the card above the results imports it.
+    if (linkId || spotifyLink || text.trim() === q) return;
     const timer = setTimeout(() => setQuery(text), 380);
     return () => clearTimeout(timer);
   }, [text]);
@@ -137,7 +141,7 @@ export default function Search() {
 
   useEffect(() => {
     const term = text.trim();
-    if (!term || linkId) return setSuggestions([]);
+    if (!term || linkId || spotifyLink) return setSuggestions([]);
     const ctrl = new AbortController();
     const timer = setTimeout(() => {
       api
@@ -240,6 +244,18 @@ export default function Search() {
           </div>
         </form>
 
+        {spotifyLink && (
+          <Link
+            to={paths.spotify}
+            state={{ link: text.trim() }}
+            className="flex items-center gap-3 rounded-[16px] bg-accent-soft px-4 py-3 text-sm ring-1 ring-line transition-colors hover:bg-surface-3"
+          >
+            <SpotifyLogoIcon size={20} className="shrink-0 text-accent-text" />
+            <span className="min-w-0 flex-1 font-medium">{t.spotify.importThis[spotifyLink.kind]}</span>
+            <ArrowRightIcon size={18} className="shrink-0 text-fg-2" />
+          </Link>
+        )}
+
         {listTerms.length > 1 && (
           <Link
             to={paths.searchList}
@@ -301,6 +317,14 @@ export default function Search() {
                 className="flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-fg-2 hover:bg-surface-3 hover:text-fg"
               >
                 <ListBulletsIcon size={16} /> <span className="hidden sm:inline">{t.search.list}</span>
+              </Link>
+              <Link
+                to={paths.spotify}
+                aria-label={t.spotify.title}
+                title={t.spotify.title}
+                className="flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-fg-2 hover:bg-surface-3 hover:text-fg"
+              >
+                <SpotifyLogoIcon size={16} /> <span className="hidden sm:inline">{t.spotify.short}</span>
               </Link>
             </div>
           </div>

@@ -144,7 +144,8 @@ function createMainWindow(url: string): BrowserWindow {
     return { action: "deny" };
   });
   win.webContents.on("will-navigate", (event, target) => {
-    if (!target.startsWith(url)) {
+    // Spotify's login runs inside the app, so it can hand the login back to it (web/src/lib/spotify.ts).
+    if (!target.startsWith(url) && !target.startsWith("https://accounts.spotify.com/")) {
       event.preventDefault();
       if (/^https?:\/\//.test(target)) void shell.openExternal(target);
     }

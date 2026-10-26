@@ -29,6 +29,8 @@ import Genre from "./views/Genre";
 import Home from "./views/Home";
 import Library from "./views/Library";
 import Search from "./views/Search";
+import SpotifyImport, { SpotifyCallback } from "./views/SpotifyImport";
+import { CALLBACK_PATH } from "./lib/spotify";
 
 const SHEET_HASH = `#${NOW_PLAYING_HASH}`;
 
@@ -125,6 +127,8 @@ export default function App() {
               <Route path={paths.home} element={<Home />} />
               <Route path={paths.search} element={<Search />} />
               <Route path={paths.searchList} element={<BatchSearch />} />
+              <Route path={paths.spotify} element={<SpotifyImport />} />
+              <Route path={CALLBACK_PATH} element={<SpotifyCallback />} />
               <Route path="/search/genre/:id" element={<Genre />} />
               <Route path="/search/artist/:id" element={<Artist />} />
               <Route path="/search/album/:id" element={<Album />} />

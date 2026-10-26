@@ -80,3 +80,24 @@ export interface AlbumPage {
   art: string;
   tracks: Track[];
 }
+
+/** What can be imported from a Spotify link. */
+export type SpotifyKind = "playlist" | "album" | "track";
+
+export interface SpotifyTrack {
+  title: string;
+  artists: string[];
+  /** Seconds. */
+  duration: number;
+}
+
+/** A Spotify playlist, album or song as a plain list, to match on YouTube Music. */
+export interface SpotifyList {
+  kind: SpotifyKind;
+  id: string;
+  name: string;
+  image: string;
+  tracks: SpotifyTrack[];
+  /** Only part of the list came through (public playlists over 100 tracks, without logging in). */
+  truncated: boolean;
+}

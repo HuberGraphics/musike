@@ -14,6 +14,7 @@ import {
 import { msg, tr, type MsgKey } from "../../../server/src/i18n";
 import * as library from "../../../server/src/library";
 import { findVideoFor, radio, search, suggestions } from "../../../server/src/search";
+import { spotifyList } from "../../../server/src/spotify";
 import { HttpError, VIDEO_ID } from "../../../server/src/types";
 import { getLang, getT } from "../i18n";
 import { ApiError, type MusikeApi, type SystemInfo } from "../lib/apiTypes";
@@ -88,6 +89,7 @@ export const api: MusikeApi = {
       const r = await resolveAudio(id);
       return { id, title: r.title, duration: r.duration, hasSdVideo: false };
     }, signal),
+  spotify: (kind, id, signal) => call(() => spotifyList(kind, id), signal),
 
   library: () => call(() => library.getLibrary()),
   addFavorite: (t) => call(async () => ({ favorites: await library.addFavorite(library.sanitizeTrack(t)) })),
@@ -129,4 +131,4 @@ export async function saveFile(name: string, text: string) {
 
 export const systemMedia = media;
 
-export const capabilities = { video: false, engineSettings: false, retryOnError: true };
+export const capabilities = { video: false, engineSettings: false, retryOnError: true, spotifyLogin: false };

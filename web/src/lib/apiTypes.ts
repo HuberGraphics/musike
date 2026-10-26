@@ -1,4 +1,4 @@
-import type { AlbumCard, AlbumPage, ArtistPage, Genre, GenreArtist, GenrePage, Library, Playlist, Track } from "./types";
+import type { AlbumCard, AlbumPage, ArtistPage, Genre, GenreArtist, GenrePage, Library, Playlist, SpotifyKind, SpotifyList, Track } from "./types";
 
 /**
  * What the app needs from a backend. The web app and the desktop app talk to the Musike server over HTTP
@@ -78,6 +78,8 @@ export interface MusikeApi {
   /** The music video matching a song, or null when YouTube has none. */
   videoFor(t: Track): Promise<Track | null>;
   prepare(id: string, signal?: AbortSignal): Promise<Prepared>;
+  /** A public Spotify playlist, album or song, read without an account (playlists: first 100 tracks). */
+  spotify(kind: SpotifyKind, id: string, signal?: AbortSignal): Promise<SpotifyList>;
 
   library(): Promise<Library>;
   addFavorite(t: Track): Promise<{ favorites: Track[] }>;

@@ -7,6 +7,7 @@ import { config } from "./config.js";
 import * as library from "./library.js";
 import { fileStorage } from "./libraryFile.js";
 import { findVideoFor, radio, search, suggestions } from "./search.js";
+import { spotifyList, type SpotifyKind } from "./spotify.js";
 import { proxyStream, serveFile } from "./stream.js";
 import { langOf, msg, tr } from "./i18n.js";
 import { presentJob, startJob, systemInfo, type Channel } from "./system.js";
@@ -122,6 +123,12 @@ export async function startServer(opts: StartOptions = {}): Promise<RunningServe
     if (!title?.trim()) throw new HttpError(400, msg("missingTitle"));
     const track = await findVideoFor(videoId(req.params), title.slice(0, 200), (artist ?? "").slice(0, 200), Number(duration) || 0);
     return { track };
+  });
+
+  /** A Spotify playlist, album or song as a plain track list, for importing (matched on YouTube Music by the app). */
+  app.get("/api/spotify/:kind/:sid", async (req) => {
+    const { kind, sid } = req.params as { kind: string; sid: string };
+    return spotifyList(kind as SpotifyKind, sid);
   });
 
   // Playback

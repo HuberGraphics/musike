@@ -1,4 +1,14 @@
-import { ArrowLeftIcon, ArrowsClockwiseIcon, CaretDownIcon, CheckIcon, ListBulletsIcon, WarningCircleIcon } from "@phosphor-icons/react";
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  ArrowsClockwiseIcon,
+  CaretDownIcon,
+  CheckIcon,
+  ListBulletsIcon,
+  PlaylistIcon,
+  SpotifyLogoIcon,
+  WarningCircleIcon,
+} from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { create } from "zustand";
@@ -9,13 +19,17 @@ import { api } from "../lib/api";
 import { useT } from "../i18n";
 import { cn } from "../lib/format";
 import { paths } from "../lib/routes";
-import type { Track } from "../lib/types";
+import { spotifyQuery } from "../lib/spotify";
+import type { SpotifyList, Track } from "../lib/types";
 import { usePlayer } from "../player/player";
+import { useLibrary } from "../stores/library";
 
 const MAX_TERMS = 50;
 /** Results kept per term, so a wrong first match can be swapped for the right one. */
 const OPTIONS = 5;
 const CONCURRENCY = 3;
+/** The server takes this many tracks per request. */
+const CHUNK = 500;
 
 /** "a, b\nc, a" → ["a", "b", "c"]. Commas or line breaks separate songs; repeats are dropped. */
 export function parseList(text: string): string[] {
@@ -34,17 +48,38 @@ export function parseList(text: string): string[] {
 
 interface Entry {
   query: string;
+  /** Seconds, when the list came with it (Spotify): picks the result of the same length. */
+  duration?: number;
+  /** The original's artists, when the list came with them: picks a result by the same artist. */
+  artists?: string[];
   status: "loading" | "ok" | "empty" | "error";
   options: Track[];
   pick: number;
   selected: boolean;
 }
 
+/** Where an imported list came from, to save it under its own name. */
+interface Source {
+  name: string;
+  image: string;
+  truncated: boolean;
+  /** The Musike playlist it was saved as. */
+  saved?: string;
+}
+
+interface Term {
+  query: string;
+  duration?: number;
+  artists?: string[];
+}
+
 interface BatchState {
   text: string;
   entries: Entry[];
+  source: Source | null;
   setText: (text: string) => void;
-  run: (terms: string[]) => Promise<void>;
+  run: (terms: Term[], source?: Source) => Promise<void>;
+  setSaved: (id: string) => void;
   retry: (i: number) => void;
   update: (i: number, patch: Partial<Entry>) => void;
   selectAll: (on: boolean) => void;
@@ -56,13 +91,14 @@ let runId = 0;
 // Module-level store: the list survives leaving the page to play or check a playlist and coming back.
 const useBatch = create<BatchState>((set, get) => {
   const lookup = async (id: number, i: number) => {
-    const query = get().entries[i]?.query;
-    if (!query) return;
+    const entry = get().entries[i];
+    if (!entry) return;
     get().update(i, { status: "loading" });
     try {
-      const options = (await api.search(query, "song")).slice(0, OPTIONS);
+      const options = (await api.search(entry.query, "song")).slice(0, OPTIONS);
       if (id !== runId) return;
-      get().update(i, options.length ? { status: "ok", options, pick: 0, selected: true } : { status: "empty", options, selected: false });
+      const { pick, sure } = pickBest(options, entry);
+      get().update(i, options.length ? { status: "ok", options, pick, selected: sure } : { status: "empty", options, selected: false });
     } catch {
       if (id === runId) get().update(i, { status: "error", selected: false });
     }
@@ -71,13 +107,18 @@ const useBatch = create<BatchState>((set, get) => {
   return {
     text: "",
     entries: [],
+    source: null,
     setText: (text) => set({ text }),
+    setSaved: (saved) => set((s) => ({ source: s.source && { ...s.source, saved } })),
     update: (i, patch) => set((s) => ({ entries: s.entries.map((e, j) => (j === i ? { ...e, ...patch } : e)) })),
     selectAll: (on) => set((s) => ({ entries: s.entries.map((e) => (e.status === "ok" ? { ...e, selected: on } : e)) })),
     retry: (i) => void lookup(runId, i),
-    run: async (terms) => {
+    run: async (terms, source) => {
       const id = ++runId;
-      set({ entries: terms.map((query): Entry => ({ query, status: "loading", options: [], pick: 0, selected: false })) });
+      set({
+        source: source ?? null,
+        entries: terms.map((term): Entry => ({ ...term, status: "loading", options: [], pick: 0, selected: false })),
+      });
       // A few at a time: fast enough, without hammering YouTube with 50 searches at once.
       let next = 0;
       const worker = async () => {
@@ -87,6 +128,45 @@ const useBatch = create<BatchState>((set, get) => {
     },
   };
 });
+
+/** Starts matching an imported Spotify list. The page shows it once opened (paths.searchList). */
+export function importSpotify(list: SpotifyList) {
+  useBatch.getState().setText("");
+  void useBatch.getState().run(
+    list.tracks.map((t) => ({ query: spotifyQuery(t), duration: t.duration || undefined, artists: t.artists })),
+    { name: list.name, image: list.image, truncated: list.truncated },
+  );
+}
+
+const fold = (s: string) =>
+  s
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase();
+
+/**
+ * For lists that say what they expect (imports): the first result by the same artist and as long as the original
+ * (±4 s), else the best of the two. The top hit is usually right, but a live or extended version, or a cover when
+ * YouTube Music lacks the song, sometimes ranks first. A result by another artist is kept but left unselected, so
+ * it isn't saved without a look. Typed lists take the first result, selected.
+ */
+function pickBest(options: Track[], { duration, artists }: Entry): { pick: number; sure: boolean } {
+  if (!duration && !artists?.length) return { pick: 0, sure: true };
+  const names = (artists ?? []).map(fold).filter(Boolean);
+  const score = (o: Track) => {
+    const artist = fold(o.artist);
+    const byArtist = names.some((n) => artist.includes(n) || (artist && n.includes(artist)));
+    const sameLength = !!duration && !!o.duration && Math.abs(o.duration - duration) <= 4;
+    return (byArtist ? 2 : 0) + (sameLength ? 1 : 0);
+  };
+  let pick = 0;
+  options.forEach((o, i) => {
+    if (score(o) > score(options[pick]!)) pick = i;
+  });
+  // Same length alone isn't enough when the artist is known: covers and karaoke versions are timed to the original.
+  const best = options.length ? score(options[pick]!) : 0;
+  return { pick, sure: names.length ? best >= 2 : best > 0 };
+}
 
 /** The chosen track of each found (or only each selected) entry, without repeats: two names can find the same song. */
 function pickedTracks(entries: Entry[], onlySelected: boolean): Track[] {
@@ -98,7 +178,7 @@ function pickedTracks(entries: Entry[], onlySelected: boolean): Track[] {
 }
 
 export default function BatchSearch() {
-  const { text, entries, setText, run, selectAll } = useBatch();
+  const { text, entries, source, setText, run, selectAll } = useBatch();
   const location = useLocation();
   const navigate = useNavigate();
   const input = useRef<HTMLTextAreaElement>(null);
@@ -113,7 +193,7 @@ export default function BatchSearch() {
   const submit = () => {
     if (!terms.length) return;
     input.current?.blur();
-    void run(terms);
+    void run(terms.map((query) => ({ query })));
   };
 
   // Arriving from the regular search with a comma-separated query: search it right away.
@@ -121,7 +201,7 @@ export default function BatchSearch() {
     const incoming = (location.state as { text?: string } | null)?.text;
     if (!incoming) return;
     setText(incoming);
-    void run(parseList(incoming));
+    void run(parseList(incoming).map((query) => ({ query })));
     navigate(".", { replace: true, state: null });
   }, []);
 
@@ -179,6 +259,8 @@ export default function BatchSearch() {
         </div>
       </form>
 
+      {source && <SourceBanner source={source} tracks={found} pending={pending} />}
+
       {entries.length > 0 && (
         <>
           <SelectionBar
@@ -204,6 +286,60 @@ export default function BatchSearch() {
           title={t.batch.emptyTitle}
           body={t.batch.emptyBody}
         />
+      )}
+    </div>
+  );
+}
+
+/** "Imported from Spotify: <name>", with saving every found song as a playlist of the same name. */
+function SourceBanner({ source, tracks, pending }: { source: Source; tracks: Track[]; pending: boolean }) {
+  const createPlaylist = useLibrary((s) => s.createPlaylist);
+  const addToPlaylist = useLibrary((s) => s.addToPlaylist);
+  const setSaved = useBatch((s) => s.setSaved);
+  const [saving, setSaving] = useState(false);
+  const t = useT();
+
+  const save = async () => {
+    setSaving(true);
+    const p = await createPlaylist(source.name, tracks.slice(0, CHUNK));
+    for (let i = CHUNK; p && i < tracks.length; i += CHUNK) await addToPlaylist(p.id, tracks.slice(i, i + CHUNK));
+    setSaving(false);
+    if (p) setSaved(p.id);
+  };
+
+  return (
+    <div className="mx-4 mt-4 flex flex-wrap items-center gap-3 rounded-[16px] bg-surface-2 p-3 ring-1 ring-line md:mx-6">
+      {source.image ? (
+        <Artwork src={source.image} className="size-12 rounded-[10px]" />
+      ) : (
+        <span className="grid size-12 place-items-center rounded-[10px] bg-surface-3 text-accent-text">
+          <SpotifyLogoIcon size={24} />
+        </span>
+      )}
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-1.5 text-[13px] text-fg-2">
+          <SpotifyLogoIcon size={14} /> {t.spotify.fromSpotify}
+        </span>
+        <span className="block truncate font-medium">{source.name}</span>
+        {source.truncated && <span className="block text-[13px] text-fg-3">{t.spotify.truncated}</span>}
+      </span>
+      {source.saved ? (
+        <Link
+          to={paths.playlist(source.saved)}
+          className="flex h-10 items-center gap-2 rounded-full bg-accent-soft px-4 text-sm font-medium text-accent-text"
+        >
+          {t.album.openPlaylist} <ArrowRightIcon size={16} />
+        </Link>
+      ) : (
+        <button
+          type="button"
+          disabled={saving || pending || !tracks.length}
+          onClick={() => void save()}
+          title={pending ? t.spotify.waitForMatches : undefined}
+          className="flex h-10 items-center gap-2 rounded-full bg-accent px-4 text-sm font-semibold text-accent-ink transition-transform active:scale-[0.97] disabled:opacity-50"
+        >
+          <PlaylistIcon size={18} /> {t.spotify.saveAs(tracks.length)}
+        </button>
       )}
     </div>
   );

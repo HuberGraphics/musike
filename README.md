@@ -31,6 +31,7 @@ Runs as a **Windows**, **macOS** and **Linux** app, as an **Android**, **Android
 - [Screenshots](#screenshots)
 - [How it works](#how-it-works)
 - [Installation](#installation)
+- [Importing from Spotify](#importing-from-spotify)
 - [Moving your library (backup)](#moving-your-library-backup)
 - [Keyboard shortcuts](#keyboard-shortcuts)
 - [Configuration](#configuration)
@@ -58,6 +59,7 @@ Musike started from the idea behind the old Discord music bots: a server that fe
 - **Browse by genre:** the **Genres** button opens YouTube Music's genres (Rock, Pop, Hip-hop, Indie, Metal, Jazz…). See each genre's bands and artists (with "Load more") or all its songs in one list
 - **Artists:** greatest hits, plus every album and single
 - **Albums:** open any album and play it in its original order, shuffle it, or save it as a playlist in one click
+- **Import from Spotify:** paste a Spotify playlist, album or song link (or log in for your own playlists and Liked Songs). Musike finds every song on YouTube Music and saves them as a playlist. [How it works](#importing-from-spotify)
 - **Search a list:** type several songs separated by commas ("Bohemian Rhapsody, Hotel California, …"). Musike finds each one, picks the best match (you can swap it) and lets you play, favorite or send them all to a playlist
 - Queue with play next, shuffle and repeat (queue or track)
 - **Autoplay radio:** when the queue ends, it keeps going with similar songs
@@ -295,6 +297,20 @@ pnpm desktop    # opens the Electron app in development mode
 pnpm typecheck  # checks every package
 ```
 
+## Importing from Spotify
+
+**Search → Spotify** (or paste a Spotify link into the search box). Musike reads the track list, searches each song on YouTube Music, then opens the result in *Search a list*: check the matches, swap any wrong one, and **Save as playlist**. A match by another artist is left unchecked, so it isn't saved without a look.
+
+**Without an account:** public playlists (first 100 songs), albums and songs. Works everywhere, including the phone apps. Musike reads Spotify's public embed page; nothing is sent to Spotify but the link.
+
+**With your account** (web and desktop): your own and collaborative playlists in full, private ones, and Liked Songs (up to 1,000 songs per import). Spotify requires a developer app of your own:
+
+1. Create an app at [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard), tick **Web API**.
+2. Add the **Redirect URI** that Musike shows on the import page, e.g. `http://127.0.0.1:4180/spotify-callback` (desktop app: `http://127.0.0.1:4280/spotify-callback`). Spotify doesn't accept `localhost`, and other addresses need https.
+3. Paste the app's **Client ID** in Musike and log in.
+
+The login runs entirely in the app (Authorization Code with PKCE, no secret); the token stays in this browser. Since February 2026 Spotify only lets apps in development mode read playlists you own or collaborate on, requires Premium on the app owner's account, and allows 5 users per app. Other people's playlists fall back to the public page (first 100 songs).
+
 ## Moving your library (backup)
 
 Until cloud sync exists, Musike exports everything to a file that **any instance** can read: web, desktop, Android, Docker, another computer.
@@ -370,6 +386,7 @@ Every route answers JSON. Errors look like `{ "error": "message", "code"?: "tool
 | `GET` | `/api/search/albums?q=` | Search albums |
 | `GET` | `/api/suggest?q=` | Search suggestions |
 | `GET` | `/api/radio/:id` | Related tracks (radio) |
+| `GET` | `/api/spotify/:kind/:id` | A public Spotify `playlist` (first 100), `album` or `track` as a track list |
 | `GET` | `/api/genres` | YouTube Music genres |
 | `GET` | `/api/genres/:gid` | A genre's artists and songs |
 | `GET` | `/api/genres/:gid/artists?offset=` | More of a genre's artists ("Load more") |
