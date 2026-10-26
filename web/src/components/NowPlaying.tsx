@@ -162,7 +162,7 @@ export function SidePanel() {
   const togglePanel = useUi((s) => s.togglePanel);
   const t = useT();
   return (
-    <aside className="pane hidden w-[360px] shrink-0 border-l border-line xl:flex" aria-label={t.nowPlaying.panel}>
+    <aside className="hidden w-[360px] shrink-0 border-l border-line bg-bg xl:flex" aria-label={t.nowPlaying.panel}>
       <div className="flex w-full flex-col overflow-hidden">
         <div className="flex h-14 items-center justify-between border-b border-line px-3">
           <PanelTabs tab={tab} onTab={openPanel} />
