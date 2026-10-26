@@ -15,6 +15,7 @@ import {
 } from "../../../server/src/browse";
 import { msg, tr, type MsgKey } from "../../../server/src/i18n";
 import * as library from "../../../server/src/library";
+import { lyricsFor } from "../../../server/src/lyrics";
 import { findVideoFor, radio, search, suggestions } from "../../../server/src/search";
 import { spotifyList } from "../../../server/src/spotify";
 import { HttpError, VIDEO_ID } from "../../../server/src/types";
@@ -87,6 +88,7 @@ export const api: MusikeApi = {
   findArtist: (name) => call(() => findArtist(name.trim().slice(0, 200), getLang())),
   findAlbum: (title, artist) => call(() => findAlbum(title.trim().slice(0, 200), artist.trim().slice(0, 200), getLang())),
   videoFor: (t) => call(() => findVideoFor(t.id, t.title, t.artist, t.duration)),
+  lyrics: (t, signal) => call(() => lyricsFor(t.id, t.title.slice(0, 200), t.artist.slice(0, 200), t.duration, t.kind), signal),
   prepare: (id, signal) =>
     call(async () => {
       if (!VIDEO_ID.test(id)) throw fail(400, "invalidVideoId");

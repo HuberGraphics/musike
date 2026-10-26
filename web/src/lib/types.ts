@@ -113,3 +113,16 @@ export interface SpotifyList {
   /** Only part of the list came through (over the import limit, or Spotify refused a page). */
   truncated: boolean;
 }
+
+/** A song's lyrics, time-synced when LRCLIB has them (see server/src/lyrics.ts). */
+export interface LyricLine {
+  /** Seconds from the start of the song; 0 for every line of unsynced lyrics. */
+  time: number;
+  text: string;
+}
+
+export interface Lyrics {
+  synced: boolean;
+  instrumental: boolean;
+  lines: LyricLine[];
+}

@@ -6,6 +6,7 @@ import { ALBUM_ID, album, ARTIST_ID, artist, findAlbum, findArtist, GENRE_ID, ge
 import { config } from "./config.js";
 import * as library from "./library.js";
 import { fileStorage } from "./libraryFile.js";
+import { lyricsFor } from "./lyrics.js";
 import { findVideoFor, radio, search, suggestions, withClient } from "./search.js";
 import { spotifyList, type SpotifyKind } from "./spotify.js";
 import { proxyStream, serveFile } from "./stream.js";
@@ -134,6 +135,20 @@ export async function startServer(opts: StartOptions = {}): Promise<RunningServe
     if (!title?.trim()) throw new HttpError(400, msg("missingTitle"));
     const track = await findVideoFor(videoId(req.params), title.slice(0, 200), (artist ?? "").slice(0, 200), Number(duration) || 0);
     return { track };
+  });
+
+  /** Lyrics for a track (time-synced when LRCLIB has them), or null. */
+  app.get("/api/lyrics/:id", async (req) => {
+    const { title, artist, duration, kind } = req.query as { title?: string; artist?: string; duration?: string; kind?: string };
+    if (!title?.trim()) throw new HttpError(400, msg("missingTitle"));
+    const lyrics = await lyricsFor(
+      videoId(req.params),
+      title.slice(0, 200),
+      (artist ?? "").slice(0, 200),
+      Number(duration) || 0,
+      kind === "video" ? "video" : "song",
+    );
+    return { lyrics };
   });
 
   /** A Spotify playlist, album or song as a plain track list, for importing (matched on YouTube Music by the app). */

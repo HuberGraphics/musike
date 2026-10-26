@@ -1,4 +1,4 @@
-import type { AlbumCard, AlbumPage, ArtistPage, Genre, GenreArtist, GenrePage, Library, Playlist, SpotifyKind, SpotifyList, Track } from "./types";
+import type { AlbumCard, AlbumPage, ArtistPage, Genre, GenreArtist, GenrePage, Library, Lyrics, Playlist, SpotifyKind, SpotifyList, Track } from "./types";
 
 /**
  * What the app needs from a backend. The web app and the desktop app talk to the Musike server over HTTP
@@ -81,6 +81,8 @@ export interface MusikeApi {
   findAlbum(title: string, artist: string): Promise<string>;
   /** The music video matching a song, or null when YouTube has none. */
   videoFor(t: Track): Promise<Track | null>;
+  /** The track's lyrics, or null when there are none. */
+  lyrics(t: Track, signal?: AbortSignal): Promise<Lyrics | null>;
   prepare(id: string, signal?: AbortSignal): Promise<Prepared>;
   /** dB above the -14 LUFS reference (YouTube's own measurement), or null when unknown. */
   loudness(id: string): Promise<number | null>;
