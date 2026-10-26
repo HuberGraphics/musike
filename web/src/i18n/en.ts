@@ -396,6 +396,7 @@ export const en = {
     accent: "Accent color",
     customColor: "Custom color",
     colors: {
+      mono: "Mono",
       volt: "Volt",
       mint: "Mint",
       aqua: "Aqua",

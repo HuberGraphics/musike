@@ -7,7 +7,7 @@ import { Artwork } from "./Artwork";
 import { FavoriteButton, ModeSwitch, Scrubber, Transport, Volume } from "./Controls";
 import { IconButton } from "./IconButton";
 
-/** Desktop and tablet player: a floating island under the content. */
+/** Desktop and tablet player: a pane along the bottom of the window. */
 export function PlayerBar() {
   const track = usePlayer(selectCurrent);
   const statusText = useStatusText();
@@ -19,8 +19,8 @@ export function PlayerBar() {
   const setShortcutsOpen = useUi((s) => s.setShortcutsOpen);
 
   return (
-    <div className="island shrink-0">
-      <div className="island-core grid h-[84px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4 px-3 lg:px-4">
+    <div className="pane shrink-0 border-t border-line">
+      <div className="grid h-[76px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4 px-3 lg:px-4">
         <div className="flex min-w-0 items-center gap-3">
           {track ? (
             <>

@@ -16,7 +16,7 @@ function Entry({ to, name, kind, tracks, sub }: { to: string; name: string; kind
     <li>
       <Link
         to={to}
-        className="group flex items-center gap-3 rounded-[16px] p-2 transition-colors hover:bg-surface-2 md:flex-col md:items-stretch md:gap-3 md:p-3"
+        className="group flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-surface-2 md:flex-col md:items-stretch md:gap-3 md:p-3"
       >
         <Cover
           kind={kind}
@@ -52,7 +52,7 @@ export default function Library() {
           <button
             type="button"
             onClick={() => setCreating(true)}
-            className="flex h-10 items-center gap-1.5 rounded-full bg-accent pr-4 pl-3 text-sm font-semibold text-accent-ink transition-transform active:scale-[0.97]"
+            className="flex h-10 items-center gap-1.5 rounded-lg bg-accent pr-4 pl-3 text-sm font-semibold text-accent-ink transition-transform active:scale-[0.97]"
           >
             <PlusIcon size={18} weight="bold" /> <span className="hidden sm:inline">{t.nav.newPlaylist}</span>
             <span className="sm:hidden">{t.library.newShort}</span>

@@ -66,7 +66,7 @@ export function BackupSection() {
   };
 
   const s = pending && summarize(pending.backup);
-  const action = "flex h-11 items-center justify-center gap-2 rounded-full text-sm font-medium transition-[transform,background-color] active:scale-[0.98] disabled:opacity-50";
+  const action = "flex h-11 items-center justify-center gap-2 rounded-lg text-sm font-medium transition-[transform,background-color] active:scale-[0.98] disabled:opacity-50";
 
   return (
     <section className="flex flex-col gap-3">
@@ -91,7 +91,7 @@ export function BackupSection() {
       </div>
 
       {pending && s && (
-        <div className="flex flex-col gap-3 rounded-[16px] bg-surface-1 p-4 ring-1 ring-line">
+        <div className="flex flex-col gap-3 rounded-xl bg-surface-1 p-4 ring-1 ring-line">
           <div>
             <p className="truncate text-sm font-medium" title={pending.file}>
               {pending.file}
@@ -162,7 +162,7 @@ export function BackupSection() {
           )}
 
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setPending(null)} className="h-11 rounded-full px-5 text-sm font-medium text-fg-2 hover:text-fg">
+            <button type="button" onClick={() => setPending(null)} className="h-11 rounded-lg px-5 text-sm font-medium text-fg-2 hover:text-fg">
               {t.common.cancel}
             </button>
             <button
@@ -170,7 +170,7 @@ export function BackupSection() {
               disabled={busy === "import"}
               onClick={() => void onImport()}
               className={cn(
-                "h-11 rounded-full px-6 text-sm font-semibold transition-transform active:scale-[0.97] disabled:opacity-50",
+                "h-11 rounded-lg px-6 text-sm font-semibold transition-transform active:scale-[0.97] disabled:opacity-50",
                 mode === "replace" ? "bg-danger text-white" : "bg-accent text-accent-ink",
               )}
             >

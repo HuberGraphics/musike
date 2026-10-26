@@ -27,15 +27,15 @@ export function PageHeader({
   return (
     <header
       className={cn(
-        "safe-top sticky top-0 z-10 bg-bg/80 backdrop-blur-xl md:bg-surface-1/80",
+        "safe-top sticky top-0 z-10 bg-bg/80 backdrop-blur-xl md:mb-4 md:border-b md:border-line",
         // Without a title or actions the header only exists for the phone brand bar.
         ((!title && !actions) || mobileOnly) && "md:hidden",
         className,
       )}
     >
-      <div className="flex h-14 items-center gap-3 px-4 md:h-16 md:px-6">
+      <div className="flex h-14 items-center gap-3 px-4 md:h-12 md:px-6">
         <LogoMark className="size-7 shrink-0 text-accent-text md:hidden" />
-        {title && <h1 className="min-w-0 flex-1 truncate text-lg font-semibold tracking-tight md:text-xl">{title}</h1>}
+        {title && <h1 className="min-w-0 flex-1 truncate text-lg font-semibold tracking-tight md:text-[15px]">{title}</h1>}
         {!title && <span className="flex-1" />}
         {actions}
         <IconButton
@@ -71,7 +71,7 @@ export function BackButton({ fallback, label }: { fallback: string; label?: stri
     <button
       type="button"
       onClick={() => ((window.history.state as { idx?: number } | null)?.idx ? navigate(-1) : navigate(fallback))}
-      className="flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-fg-2 hover:bg-surface-3 hover:text-fg"
+      className="flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-fg-2 hover:bg-surface-3 hover:text-fg"
     >
       <ArrowLeftIcon size={16} /> {label ?? t.common.back}
     </button>
@@ -81,7 +81,7 @@ export function BackButton({ fallback, label }: { fallback: string; label?: stri
 export function EmptyState({ icon, title, body, action }: { icon: ReactNode; title: string; body: string; action?: ReactNode }) {
   return (
     <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
-      <span className="grid size-16 place-items-center rounded-[18px] bg-surface-3 text-fg-2">{icon}</span>
+      <span className="grid size-16 place-items-center rounded-xl bg-surface-3 text-fg-2">{icon}</span>
       <p className="text-lg font-semibold tracking-tight">{title}</p>
       <p className="max-w-[40ch] text-sm text-fg-2">{body}</p>
       {action}

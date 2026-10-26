@@ -28,7 +28,7 @@ export default function Artist() {
     <div className="pb-8">
       <PageHeader title={name} actions={<BackButton fallback={paths.search} />} />
 
-      <div className="relative mx-4 overflow-hidden rounded-[20px] bg-surface-2 ring-1 ring-line md:mx-6">
+      <div className="relative mx-4 overflow-hidden rounded-xl bg-surface-2 ring-1 ring-line md:mx-6">
         {page.status === "ok" && page.data.banner && (
           <div className="absolute inset-0">
             <Artwork src={page.data.banner} className="size-full" />
@@ -69,7 +69,7 @@ export default function Artist() {
             <button
               type="button"
               onClick={page.retry}
-              className="mt-2 h-11 rounded-full bg-surface-3 px-6 text-sm font-medium hover:bg-surface-4"
+              className="mt-2 h-11 rounded-lg bg-surface-3 px-6 text-sm font-medium hover:bg-surface-4"
             >
               {t.common.retry}
             </button>

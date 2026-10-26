@@ -39,7 +39,7 @@ function SettingsButton() {
       onClick={() => setOpen(true)}
       aria-label={attention ? t.nav.settingsAttention : t.nav.settings}
       title={t.nav.settings}
-      className="relative flex h-10 w-full items-center justify-center gap-2 rounded-full px-3 text-sm text-fg-2 transition-colors hover:bg-surface-3 hover:text-fg wide:justify-start"
+      className="relative flex h-10 w-full items-center justify-center gap-2 rounded-lg px-3 text-sm text-fg-2 transition-colors hover:bg-surface-3 hover:text-fg wide:justify-start"
     >
       <GearSixIcon size={19} />
       <span className="hidden flex-1 text-left wide:inline">{t.nav.settings}</span>
@@ -102,16 +102,17 @@ export function Rail() {
   const [creating, setCreating] = useState(false);
 
   return (
-    <aside className="island hidden w-[78px] shrink-0 md:flex wide:w-[256px]">
-      <div className="island-core flex w-full flex-col overflow-hidden">
-        <div className="flex h-16 items-center justify-center wide:justify-start wide:px-4 [@media(max-height:540px)]:h-12">
-          <LogoMark className="size-8 text-accent-text wide:hidden" />
-          <span className="hidden wide:block">
+    <aside className="pane hidden w-[68px] shrink-0 border-r border-line md:flex wide:w-[248px]">
+      <div className="flex w-full flex-col overflow-hidden">
+        <div className="relative flex h-14 items-center justify-center wide:justify-start wide:px-4 [@media(max-height:540px)]:h-11">
+          <div aria-hidden="true" className="starfield pointer-events-none absolute inset-x-0 top-0 h-20" />
+          <LogoMark className="relative size-6 text-fg wide:hidden" />
+          <span className="relative hidden wide:block">
             <Logo />
           </span>
         </div>
 
-        <nav aria-label={t.nav.main} className="flex flex-col gap-1 px-2">
+        <nav aria-label={t.nav.main} className="flex flex-col gap-0.5 px-2">
           {nav.map(({ to, key, Icon, end }) => (
             <NavLink
               key={to}
@@ -120,33 +121,33 @@ export function Rail() {
               title={t.nav[key]}
               className={({ isActive }) =>
                 cn(
-                  "flex h-11 items-center justify-center gap-3 rounded-full transition-colors duration-200 wide:justify-start wide:px-4 [@media(max-height:540px)]:h-9",
-                  isActive ? "bg-surface-4 text-fg" : "text-fg-2 hover:bg-surface-3 hover:text-fg",
+                  "flex h-9 items-center justify-center gap-2.5 rounded-lg transition-colors duration-150 wide:justify-start wide:px-3 [@media(max-height:540px)]:h-8",
+                  isActive ? "bg-surface-3 text-fg" : "text-fg-2 hover:bg-surface-2 hover:text-fg",
                 )
               }
             >
               {({ isActive }) => (
                 <>
-                  <Icon size={22} weight={isActive ? "fill" : "regular"} />
-                  <span className="hidden text-sm font-medium wide:inline">{t.nav[key]}</span>
+                  <Icon size={18} weight={isActive ? "fill" : "regular"} />
+                  <span className="hidden text-[13px] font-medium wide:inline">{t.nav[key]}</span>
                 </>
               )}
             </NavLink>
           ))}
         </nav>
 
-        <div className="mx-4 my-3 h-px bg-line [@media(max-height:540px)]:my-1.5" />
+        <div className="my-3 h-px bg-line [@media(max-height:540px)]:my-1.5" />
 
         <div className="flex items-center justify-between px-4 pb-1 [@media(max-height:540px)]:pb-0">
-          <span className="hidden text-xs font-medium text-fg-3 wide:block">{t.nav.yourCollection}</span>
+          <span className="hidden text-xs text-fg-3 wide:block">{t.nav.yourCollection}</span>
           <button
             type="button"
             onClick={() => setCreating(true)}
             aria-label={t.nav.newPlaylist}
             title={t.nav.newPlaylist}
-            className="mx-auto grid size-8 place-items-center rounded-full text-fg-2 transition-colors hover:bg-surface-3 hover:text-fg wide:mx-0"
+            className="mx-auto grid size-7 place-items-center rounded-md text-fg-3 transition-colors hover:bg-surface-3 hover:text-fg wide:mx-0"
           >
-            <PlusIcon size={18} />
+            <PlusIcon size={16} />
           </button>
         </div>
 

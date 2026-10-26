@@ -390,6 +390,7 @@ export const pt: Messages = {
     accent: "Cor de destaque",
     customColor: "Cor personalizada",
     colors: {
+      mono: "Mono",
       volt: "Volt",
       mint: "Menta",
       aqua: "Água",

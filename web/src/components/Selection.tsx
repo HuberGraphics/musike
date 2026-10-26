@@ -45,7 +45,7 @@ function Action({
       aria-label={label}
       title={label}
       className={cn(
-        "flex h-9 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium whitespace-nowrap transition-transform active:scale-[0.97] disabled:opacity-40 sm:px-3.5",
+        "flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium whitespace-nowrap transition-transform active:scale-[0.97] disabled:opacity-40 sm:px-3.5",
         primary ? "bg-accent text-accent-ink" : "bg-surface-3 text-fg hover:bg-surface-4",
       )}
     >
@@ -100,7 +100,7 @@ export function SelectionBar({
   return (
     <div
       className={cn(
-        "sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-[5] border-b border-line bg-bg/80 px-4 py-2.5 backdrop-blur-xl md:top-16 md:bg-surface-1/80 md:px-6",
+        "sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-[5] border-b border-line bg-bg/80 px-4 py-2.5 backdrop-blur-xl md:top-12 md:bg-bg/80 md:px-6",
         className,
       )}
     >
@@ -111,7 +111,7 @@ export function SelectionBar({
           aria-checked={allSelected}
           disabled={!all.length}
           onClick={onToggleAll}
-          className="flex h-9 min-w-0 items-center gap-2 rounded-full pr-1 pl-1.5 text-sm font-medium text-fg-2 hover:text-fg disabled:opacity-40 sm:pr-3"
+          className="flex h-9 min-w-0 items-center gap-2 rounded-lg pr-1 pl-1.5 text-sm font-medium text-fg-2 hover:text-fg disabled:opacity-40 sm:pr-3"
         >
           <Check on={allSelected} />
           <span className="truncate">{label}</span>

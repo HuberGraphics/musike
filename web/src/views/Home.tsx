@@ -70,8 +70,8 @@ export default function Home() {
       {status === "loading" && <TrackListSkeleton rows={6} />}
 
       {empty && (
-        <div className="mx-4 flex flex-col items-start gap-5 rounded-[20px] bg-surface-2 p-6 ring-1 ring-line md:mx-6 md:flex-row md:items-center md:p-8">
-          <span className="grid size-16 shrink-0 place-items-center rounded-[18px] bg-accent text-accent-ink">
+        <div className="mx-4 flex flex-col items-start gap-5 rounded-xl bg-surface-2 p-6 ring-1 ring-line md:mx-6 md:flex-row md:items-center md:p-8">
+          <span className="grid size-16 shrink-0 place-items-center rounded-xl bg-accent text-accent-ink">
             <LogoMark className="size-10" />
           </span>
           <div className="flex-1">
@@ -81,7 +81,7 @@ export default function Home() {
           <button
             type="button"
             onClick={() => navigate(paths.search)}
-            className="flex h-12 items-center gap-2 rounded-full bg-accent pr-6 pl-5 font-semibold text-accent-ink transition-transform active:scale-[0.97]"
+            className="flex h-12 items-center gap-2 rounded-lg bg-accent pr-6 pl-5 font-semibold text-accent-ink transition-transform active:scale-[0.97]"
           >
             <MagnifyingGlassIcon size={20} weight="bold" /> {t.common.searchMusic}
           </button>

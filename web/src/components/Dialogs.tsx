@@ -50,18 +50,18 @@ export function AddToPlaylistDialog() {
             maxLength={80}
             onChange={(e) => setName(e.target.value)}
             placeholder={t.dialogs.namePlaceholder}
-            className="h-12 rounded-full border border-line-strong bg-surface-1 px-5 text-[15px] placeholder:text-fg-3 focus:border-accent focus:outline-none"
+            className="h-12 rounded-lg border border-line-strong bg-surface-1 px-5 text-[15px] placeholder:text-fg-3 focus:border-accent focus:outline-none"
           />
           <div className="flex justify-end gap-2 pt-1">
             {playlists.length > 0 && (
-              <button type="button" onClick={() => setCreating(false)} className="h-11 rounded-full px-5 text-sm font-medium text-fg-2 hover:text-fg">
+              <button type="button" onClick={() => setCreating(false)} className="h-11 rounded-lg px-5 text-sm font-medium text-fg-2 hover:text-fg">
                 {t.common.back}
               </button>
             )}
             <button
               type="submit"
               disabled={!name.trim()}
-              className="h-11 rounded-full bg-accent px-6 text-sm font-semibold text-accent-ink transition-transform active:scale-[0.97] disabled:opacity-40"
+              className="h-11 rounded-lg bg-accent px-6 text-sm font-semibold text-accent-ink transition-transform active:scale-[0.97] disabled:opacity-40"
             >
               {t.dialogs.createAndAdd}
             </button>
@@ -149,13 +149,13 @@ export function NamePlaylistDialog({
           maxLength={80}
           onChange={(e) => setName(e.target.value)}
           placeholder={t.dialogs.namePlaceholder}
-          className="h-12 rounded-full border border-line-strong bg-surface-1 px-5 text-[15px] placeholder:text-fg-3 focus:border-accent focus:outline-none"
+          className="h-12 rounded-lg border border-line-strong bg-surface-1 px-5 text-[15px] placeholder:text-fg-3 focus:border-accent focus:outline-none"
         />
         <div className="flex justify-end pt-1">
           <button
             type="submit"
             disabled={!name.trim()}
-            className="h-11 rounded-full bg-accent px-6 text-sm font-semibold text-accent-ink transition-transform active:scale-[0.97] disabled:opacity-40"
+            className="h-11 rounded-lg bg-accent px-6 text-sm font-semibold text-accent-ink transition-transform active:scale-[0.97] disabled:opacity-40"
           >
             {action}
           </button>

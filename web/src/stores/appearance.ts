@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { accentCss, DEFAULT_ACCENT, isHex } from "../lib/accent";
+import { accentCss, DEFAULT_ACCENT, isHex, VOLT } from "../lib/accent";
 
 /** How the app looks and what it shows, per device. The Now Playing panel lives in the UI store (it has a button too). */
 export interface Appearance {
@@ -24,9 +24,10 @@ export const DEFAULT_APPEARANCE: Appearance = {
   homeFavorites: true,
 };
 
-/** Ready-made accents. "volt" is Musike's own. */
+/** Ready-made accents. "mono" is the default; "volt" is upstream Musike's own. */
 export const ACCENTS = [
-  { id: "volt", color: DEFAULT_ACCENT },
+  { id: "mono", color: DEFAULT_ACCENT },
+  { id: "volt", color: VOLT },
   { id: "mint", color: "#34d399" },
   { id: "aqua", color: "#22d3ee" },
   { id: "sky", color: "#60a5fa" },
@@ -51,9 +52,17 @@ export function cleanAppearance(input: unknown): Appearance {
   return out;
 }
 
+const T3_LOOK_KEY = "musike:t3-look";
+
 function read(): Appearance {
   try {
-    return cleanAppearance(JSON.parse(localStorage.getItem(KEY) ?? "{}"));
+    const saved = cleanAppearance(JSON.parse(localStorage.getItem(KEY) ?? "{}"));
+    // Once: settings saved before the T3 look hold upstream's default lime only because it was the default.
+    if (!localStorage.getItem(T3_LOOK_KEY)) {
+      localStorage.setItem(T3_LOOK_KEY, "1");
+      if (saved.accent === VOLT) saved.accent = DEFAULT_ACCENT;
+    }
+    return saved;
   } catch {
     return { ...DEFAULT_APPEARANCE };
   }

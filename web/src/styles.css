@@ -10,27 +10,31 @@
   }
 }
 
-/* Theme tokens. Dark is the default; see docs/design-system.md */
+/*
+ * Theme tokens. Dark is the default; see docs/design-system.md. This fork follows T3 Code's look: pure black,
+ * flat panes split by hairlines, neutral greys, and white as the default accent.
+ */
 :root,
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0b0c0f;
-  --surface-1: #121318;
-  --surface-2: #181a20;
-  --surface-3: #20232b;
-  --surface-4: #2a2e38;
+  --bg: #000000;
+  --surface-1: #070707;
+  --surface-2: #101010;
+  --surface-3: #191919;
+  --surface-4: #242424;
   --line: rgb(255 255 255 / 0.07);
-  --line-strong: rgb(255 255 255 / 0.12);
-  --fg: #eceef2;
-  --fg-2: #9ba1ad;
-  --fg-3: #6b717d;
-  --accent: #c3ec52;
-  --accent-ink: #0b0c0f;
-  --accent-text: #c3ec52;
-  --accent-soft: rgb(195 236 82 / 0.12);
-  --highlight: rgb(255 255 255 / 0.06);
-  --scrim: rgb(5 6 8 / 0.72);
-  --danger: #ff7a6b;
+  --line-strong: rgb(255 255 255 / 0.11);
+  --fg: #ededed;
+  --fg-2: #a1a1a1;
+  --fg-3: #6b6b6b;
+  --accent: #ededed;
+  --accent-ink: #000000;
+  --accent-text: #f5f5f5;
+  --accent-soft: rgb(255 255 255 / 0.08);
+  --highlight: rgb(255 255 255 / 0.04);
+  --scrim: rgb(0 0 0 / 0.7);
+  --danger: #f87171;
+  --info: #60a5fa;
 }
 
 [data-theme="light"] {
@@ -45,13 +49,14 @@
   --fg: #12141a;
   --fg-2: #555b67;
   --fg-3: #7d8390;
-  --accent: #c3ec52;
-  --accent-ink: #0b0c0f;
-  --accent-text: #4a6300;
-  --accent-soft: rgb(110 150 0 / 0.12);
+  --accent: #171717;
+  --accent-ink: #ffffff;
+  --accent-text: #171717;
+  --accent-soft: rgb(0 0 0 / 0.06);
   --highlight: rgb(255 255 255 / 0.8);
   --scrim: rgb(20 22 28 / 0.45);
   --danger: #c4372a;
+  --info: #2563eb;
 }
 
 @theme inline {
@@ -71,12 +76,13 @@
   --color-accent-soft: var(--accent-soft);
   --color-scrim: var(--scrim);
   --color-danger: var(--danger);
-  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --color-info: var(--info);
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", monospace;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --radius-tile: 14px;
-  --radius-art: 10px;
-  --radius-panel: 20px;
+  --radius-tile: 10px;
+  --radius-art: 8px;
+  --radius-panel: 12px;
 }
 
 @layer base {
@@ -92,13 +98,13 @@
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior: none;
-    font-feature-settings: "ss01";
+    font-feature-settings: "cv11", "ss01";
   }
   button {
     cursor: pointer;
   }
   :focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--fg-3);
     outline-offset: 2px;
     border-radius: 8px;
   }
@@ -109,17 +115,39 @@
 }
 
 @layer components {
-  /* Floating island with a nested bezel: outer shell + inner core (high-end-visual-design). */
+  /* Floating surface (dialogs, menus, the mini player): a single flat card with a hairline, like T3's popovers. */
   .island {
-    background: var(--surface-1);
-    border: 1px solid var(--line);
+    background: var(--surface-2);
+    border: 1px solid var(--line-strong);
     border-radius: var(--radius-panel);
-    padding: 5px;
+    box-shadow: 0 16px 48px rgb(0 0 0 / 0.5);
   }
   .island-core {
-    background: var(--surface-2);
-    border-radius: calc(var(--radius-panel) - 5px);
-    box-shadow: inset 0 1px 0 var(--highlight);
+    border-radius: inherit;
+  }
+
+  /* Docked pane (sidebar, player bar, Now Playing): flat against the window, split from the content by hairlines. */
+  .pane {
+    background: var(--surface-1);
+  }
+
+  /* The night sky behind the sidebar's brand, after T3 Code's header. */
+  .starfield {
+    background:
+      radial-gradient(1px 1px at 12% 30%, rgb(255 255 255 / 0.7), transparent 60%),
+      radial-gradient(1px 1px at 28% 72%, rgb(255 255 255 / 0.45), transparent 60%),
+      radial-gradient(1px 1px at 46% 18%, rgb(255 255 255 / 0.6), transparent 60%),
+      radial-gradient(1.5px 1.5px at 63% 52%, rgb(255 255 255 / 0.8), transparent 60%),
+      radial-gradient(1px 1px at 78% 26%, rgb(255 255 255 / 0.5), transparent 60%),
+      radial-gradient(1px 1px at 88% 68%, rgb(255 255 255 / 0.55), transparent 60%),
+      radial-gradient(1px 1px at 36% 44%, rgb(255 255 255 / 0.35), transparent 60%),
+      radial-gradient(120% 90% at 30% 0%, rgb(76 56 168 / 0.55), transparent 70%),
+      radial-gradient(80% 120% at 85% 10%, rgb(37 66 160 / 0.45), transparent 70%),
+      radial-gradient(60% 80% at 60% 100%, rgb(130 50 160 / 0.35), transparent 75%);
+    mask-image: linear-gradient(to bottom, black 55%, transparent);
+  }
+  [data-theme="light"] .starfield {
+    opacity: 0.35;
   }
 
   .scroll-area {
@@ -177,7 +205,7 @@
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  opacity: 0.035;
+  opacity: 0.02;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 [data-theme="light"] .grain::after {

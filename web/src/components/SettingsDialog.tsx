@@ -38,7 +38,7 @@ function Segmented<T extends string>({
           aria-checked={value === v}
           onClick={() => onChange(v)}
           className={cn(
-            "flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full px-3 text-[13px] font-medium transition-colors duration-200",
+            "flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-[13px] font-medium transition-colors duration-200",
             value === v ? "bg-surface-4 text-fg shadow-[inset_0_1px_0_var(--highlight)]" : "text-fg-2 hover:text-fg",
           )}
         >
@@ -160,7 +160,7 @@ export function SettingsDialog() {
         <section className="flex flex-col gap-3">
           <h3 className="text-xs font-medium text-fg-3">{t.settings.engine}</h3>
 
-          <div className="flex flex-col gap-4 rounded-[16px] bg-surface-1 p-4 ring-1 ring-line">
+          <div className="flex flex-col gap-4 rounded-xl bg-surface-1 p-4 ring-1 ring-line">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="font-semibold tracking-tight">yt-dlp</p>
@@ -199,7 +199,7 @@ export function SettingsDialog() {
               type="button"
               disabled={running || !info || (missing && !info.canInstall)}
               onClick={() => void update(channel)}
-              className="flex h-12 items-center justify-center gap-2 rounded-full bg-accent px-6 font-semibold text-accent-ink transition-transform active:scale-[0.98] disabled:opacity-60"
+              className="flex h-12 items-center justify-center gap-2 rounded-lg bg-accent px-6 font-semibold text-accent-ink transition-transform active:scale-[0.98] disabled:opacity-60"
             >
               {running ? (
                 <ArrowsClockwiseIcon size={20} weight="bold" className="animate-spin" />

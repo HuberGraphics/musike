@@ -99,12 +99,12 @@ export default function SpotifyImport() {
                 setError("");
               }}
               placeholder="https://open.spotify.com/playlist/…"
-              className="h-12 min-w-0 flex-1 rounded-full border border-line-strong bg-surface-2 px-5 text-[16px] placeholder:text-fg-3 focus:border-accent focus:bg-surface-1 focus:outline-none"
+              className="h-12 min-w-0 flex-1 rounded-lg border border-line-strong bg-surface-2 px-5 text-[16px] placeholder:text-fg-3 focus:border-accent focus:bg-surface-1 focus:outline-none"
             />
             <button
               type="submit"
               disabled={!link.trim() || !!busy}
-              className="h-12 shrink-0 rounded-full bg-accent px-6 text-sm font-semibold text-accent-ink transition-transform active:scale-[0.97] disabled:opacity-40"
+              className="h-12 shrink-0 rounded-lg bg-accent px-6 text-sm font-semibold text-accent-ink transition-transform active:scale-[0.97] disabled:opacity-40"
             >
               {busy && busy === parseSpotifyLink(link)?.id ? t.common.loading : t.spotify.import}
             </button>
@@ -143,7 +143,7 @@ function Account({ busy, onOpen }: { busy: string | null; onOpen: (kind: Spotify
   }, [!!token]);
 
   return (
-    <section className="flex flex-col gap-3 rounded-[20px] bg-surface-2 p-4 ring-1 ring-line md:p-5">
+    <section className="flex flex-col gap-3 rounded-xl bg-surface-2 p-4 ring-1 ring-line md:p-5">
       <div className="flex items-center gap-3">
         <SpotifyLogoIcon size={24} className="shrink-0 text-accent-text" />
         <h2 className="flex-1 font-semibold">{t.spotify.accountTitle}</h2>
@@ -151,7 +151,7 @@ function Account({ busy, onOpen }: { busy: string | null; onOpen: (kind: Spotify
           <button
             type="button"
             onClick={logout}
-            className="flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-fg-2 hover:bg-surface-3 hover:text-fg"
+            className="flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-fg-2 hover:bg-surface-3 hover:text-fg"
           >
             <SignOutIcon size={16} /> {t.spotify.logout}
           </button>
@@ -207,12 +207,12 @@ function Account({ busy, onOpen }: { busy: string | null; onOpen: (kind: Spotify
               placeholder="Client ID"
               autoComplete="off"
               spellCheck={false}
-              className="h-11 min-w-0 flex-1 rounded-full border border-line-strong bg-surface-1 px-4 font-mono text-[14px] placeholder:font-sans placeholder:text-fg-3 focus:border-accent focus:outline-none"
+              className="h-11 min-w-0 flex-1 rounded-lg border border-line-strong bg-surface-1 px-4 font-mono text-[14px] placeholder:font-sans placeholder:text-fg-3 focus:border-accent focus:outline-none"
             />
             <button
               type="submit"
               disabled={!/^[0-9a-f]{32}$/i.test(draft.trim())}
-              className="h-11 shrink-0 rounded-full bg-accent px-5 text-sm font-semibold text-accent-ink transition-transform active:scale-[0.97] disabled:opacity-40"
+              className="h-11 shrink-0 rounded-lg bg-accent px-5 text-sm font-semibold text-accent-ink transition-transform active:scale-[0.97] disabled:opacity-40"
             >
               {t.spotify.login}
             </button>

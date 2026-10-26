@@ -48,7 +48,7 @@ export default function Collection({ kind }: Props) {
           title={t.collection.notFoundTitle}
           body={t.collection.notFoundBody}
           action={
-            <Link to={paths.library} className="mt-2 h-11 rounded-full bg-surface-3 px-6 text-sm leading-[44px] font-medium">
+            <Link to={paths.library} className="mt-2 h-11 rounded-lg bg-surface-3 px-6 text-sm leading-[44px] font-medium">
               {t.collection.goToLibrary}
             </Link>
           }
@@ -73,7 +73,7 @@ export default function Collection({ kind }: Props) {
             kind={kind}
             tracks={tracks}
             iconSize={64}
-            className="size-44 shrink-0 rounded-[18px] shadow-[0_24px_60px_rgb(0_0_0/0.4)] md:size-52"
+            className="size-44 shrink-0 rounded-xl shadow-[0_24px_60px_rgb(0_0_0/0.4)] md:size-52"
           />
           <div className="flex min-w-0 flex-col items-center gap-2 text-center md:items-start md:text-left">
             <span className="hidden text-xs font-medium text-fg-2 md:block">{label}</span>
@@ -128,7 +128,7 @@ export default function Collection({ kind }: Props) {
                   : t.collection.emptyPlaylistBody
             }
             action={
-              <Link to={paths.search} className="mt-2 h-11 rounded-full bg-accent px-6 text-sm leading-[44px] font-semibold text-accent-ink">
+              <Link to={paths.search} className="mt-2 h-11 rounded-lg bg-accent px-6 text-sm leading-[44px] font-semibold text-accent-ink">
                 {t.common.searchMusic}
               </Link>
             }
@@ -180,7 +180,7 @@ export default function Collection({ kind }: Props) {
               {t.collection.deleteBody(playlist.name, playlist.tracks.length)}
             </p>
             <div className="mt-5 flex justify-end gap-2">
-              <button type="button" onClick={() => setConfirmDelete(false)} className="h-11 rounded-full px-5 text-sm font-medium text-fg-2 hover:text-fg">
+              <button type="button" onClick={() => setConfirmDelete(false)} className="h-11 rounded-lg px-5 text-sm font-medium text-fg-2 hover:text-fg">
                 {t.common.cancel}
               </button>
               <button
@@ -190,7 +190,7 @@ export default function Collection({ kind }: Props) {
                   void lib.deletePlaylist(playlist.id);
                   navigate(paths.library);
                 }}
-                className="h-11 rounded-full bg-danger px-6 text-sm font-semibold text-white"
+                className="h-11 rounded-lg bg-danger px-6 text-sm font-semibold text-white"
               >
                 {t.collection.delete}
               </button>

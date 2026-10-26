@@ -100,7 +100,7 @@ export function LayoutSection() {
   return (
     <section className="flex flex-col gap-2">
       <h3 className="text-xs font-medium text-fg-3">{t.customize.layout}</h3>
-      <div className="flex flex-col divide-y divide-line rounded-[16px] bg-surface-1 ring-1 ring-line">
+      <div className="flex flex-col divide-y divide-line rounded-xl bg-surface-1 ring-1 ring-line">
         <SwitchRow label={t.customize.panel} body={t.customize.panelBody} checked={panelOpen} onChange={setPanelDocked} />
         <SwitchRow label={t.customize.sidebarPlaylists} checked={a.sidebarPlaylists} onChange={(v) => a.set({ sidebarPlaylists: v })} />
         <SwitchRow
@@ -123,7 +123,7 @@ export function LayoutSection() {
             aria-checked={a[key]}
             onClick={() => a.set({ [key]: !a[key] })}
             className={cn(
-              "flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-medium ring-1 transition-colors",
+              "flex h-9 items-center gap-1.5 rounded-lg px-3.5 text-[13px] font-medium ring-1 transition-colors",
               a[key] ? "bg-accent-soft text-accent-text ring-accent/40" : "text-fg-2 ring-line hover:text-fg",
             )}
           >

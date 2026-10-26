@@ -172,7 +172,7 @@ export function ModeSwitch({ className }: { className?: string }) {
 
   const seg = (on: boolean) =>
     cn(
-      "flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-medium transition-colors duration-200",
+      "flex h-9 items-center gap-1.5 rounded-lg px-3.5 text-[13px] font-medium transition-colors duration-200",
       on ? "bg-surface-4 text-fg shadow-[inset_0_1px_0_var(--highlight)]" : "text-fg-2 hover:text-fg",
     );
 
@@ -199,7 +199,7 @@ export function ModeSwitch({ className }: { className?: string }) {
           onClick={() => setQuality(quality === "sd" ? "hd" : "sd")}
           title={quality === "sd" ? t.player.toHd : t.player.toSd}
           className={cn(
-            "h-9 rounded-full px-3 font-mono text-[12px] font-semibold ring-1 transition-colors",
+            "h-9 rounded-lg px-3 font-mono text-[12px] font-semibold ring-1 transition-colors",
             quality === "hd" ? "bg-accent-soft text-accent-text ring-accent/40" : "text-fg-2 ring-line hover:text-fg",
           )}
         >

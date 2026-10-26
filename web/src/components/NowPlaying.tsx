@@ -36,7 +36,7 @@ function Stage({ track, slot, className }: { track: Track; slot: number; classNa
         <VideoSlot
           priority={slot}
           expandable
-          className={cn("rounded-[16px]", portrait ? "h-[min(52dvh,560px)]" : "w-full")}
+          className={cn("rounded-xl", portrait ? "h-[min(52dvh,560px)]" : "w-full")}
           style={{ aspectRatio: Math.min(16 / 9, Math.max(9 / 16, aspect)) }}
         />
       </div>
@@ -55,7 +55,7 @@ function Stage({ track, slot, className }: { track: Track; slot: number; classNa
         fallback={track.thumb}
         alt={t.nowPlaying.coverOf(track.title)}
         iconSize={48}
-        className="relative size-full rounded-[18px] shadow-[0_24px_60px_rgb(0_0_0/0.45)]"
+        className="relative size-full rounded-xl shadow-[0_24px_60px_rgb(0_0_0/0.45)]"
       />
       {note && (
         <span className="absolute inset-x-3 bottom-3 flex items-center justify-center gap-2 rounded-full bg-black/65 px-3 py-2 text-center text-[13px] font-medium text-white backdrop-blur-md">
@@ -107,7 +107,7 @@ function PanelBody({ tab, slot }: { tab: PanelTab; slot: number }) {
       <button
         type="button"
         onClick={() => void startRadio(track)}
-        className="flex h-11 items-center justify-center gap-2 rounded-full bg-surface-1 text-sm font-medium ring-1 ring-line transition-colors hover:bg-surface-3 active:scale-[0.98]"
+        className="flex h-11 items-center justify-center gap-2 rounded-lg bg-surface-1 text-sm font-medium ring-1 ring-line transition-colors hover:bg-surface-3 active:scale-[0.98]"
       >
         <RadioIcon size={18} /> {t.nowPlaying.startRadio}
       </button>
@@ -144,7 +144,7 @@ function PanelTabs({ tab, onTab }: { tab: PanelTab; onTab: (t: PanelTab) => void
           aria-selected={tab === id}
           onClick={() => onTab(id)}
           className={cn(
-            "h-9 rounded-full px-4 text-sm font-medium transition-colors",
+            "h-9 rounded-lg px-4 text-sm font-medium transition-colors",
             tab === id ? "bg-surface-4 text-fg" : "text-fg-2 hover:text-fg",
           )}
         >
@@ -162,9 +162,9 @@ export function SidePanel() {
   const togglePanel = useUi((s) => s.togglePanel);
   const t = useT();
   return (
-    <aside className="island hidden w-[360px] shrink-0 xl:flex" aria-label={t.nowPlaying.panel}>
-      <div className="island-core flex w-full flex-col overflow-hidden">
-        <div className="flex h-16 items-center justify-between px-3">
+    <aside className="pane hidden w-[360px] shrink-0 border-l border-line xl:flex" aria-label={t.nowPlaying.panel}>
+      <div className="flex w-full flex-col overflow-hidden">
+        <div className="flex h-14 items-center justify-between border-b border-line px-3">
           <PanelTabs tab={tab} onTab={openPanel} />
           <IconButton label={t.nowPlaying.closePanel} size="sm" onClick={() => togglePanel(tab)}>
             <XIcon size={18} />
