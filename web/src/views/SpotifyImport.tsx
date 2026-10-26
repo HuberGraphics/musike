@@ -252,7 +252,7 @@ function Account({ busy, onOpen }: { busy: string | null; onOpen: (kind: Spotify
                   <span className="block truncate text-[13px] text-fg-2">
                     {busy === p.id
                       ? t.common.loading
-                      : [p.total !== null ? t.common.songs(p.total) : "", p.full ? "" : t.spotify.publicOnly].filter(Boolean).join(" · ")}
+                      : p.total !== null && t.common.songs(p.total)}
                   </span>
                 </span>
               </button>

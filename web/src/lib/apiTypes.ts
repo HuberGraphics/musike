@@ -78,7 +78,7 @@ export interface MusikeApi {
   /** The music video matching a song, or null when YouTube has none. */
   videoFor(t: Track): Promise<Track | null>;
   prepare(id: string, signal?: AbortSignal): Promise<Prepared>;
-  /** A public Spotify playlist, album or song, read without an account (playlists: first 100 tracks). */
+  /** A public Spotify playlist, album or song, read without an account (up to 1000 tracks). */
   spotify(kind: SpotifyKind, id: string, signal?: AbortSignal): Promise<SpotifyList>;
 
   library(): Promise<Library>;

@@ -98,6 +98,6 @@ export interface SpotifyList {
   name: string;
   image: string;
   tracks: SpotifyTrack[];
-  /** Only part of the list came through (public playlists over 100 tracks, without logging in). */
+  /** Only part of the list came through (over the import limit, or Spotify refused a page). */
   truncated: boolean;
 }

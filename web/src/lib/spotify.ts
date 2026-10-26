@@ -4,7 +4,7 @@ import type { SpotifyKind, SpotifyList, SpotifyTrack } from "./types";
 
 /**
  * Importing from Spotify. Without an account, public playlists, albums and songs come from the Musike backend
- * (Spotify's embed page, first 100 tracks of a playlist). Logging in reads the person's own playlists in full,
+ * (Spotify's embed page, then the web player's API, up to IMPORT_LIMIT tracks). Logging in adds private playlists,
  * private ones and Liked Songs straight from the Web API, in the browser: Authorization Code with PKCE needs
  * no secret, so nothing goes through the Musike server. Each person registers their own Spotify app (free) and
  * pastes its Client ID: since 2026, an app in development mode serves at most 5 accounts.
@@ -252,24 +252,19 @@ export interface MyPlaylist {
   name: string;
   image: string;
   total: number | null;
-  /** Spotify only gives the full track list of the user's own (or collaborative) playlists. */
-  full: boolean;
 }
 
 export async function myPlaylists(): Promise<MyPlaylist[]> {
-  const me = await get<{ id: string }>("/me");
   const list = await all<{
     id: string;
     name: string;
-    collaborative?: boolean;
-    owner?: { id?: string };
     images?: { url?: string }[] | null;
     items?: { total?: number };
     tracks?: { total?: number };
   } | null>("/me/playlists?limit=50", 500);
   const liked = await get<Page<unknown>>("/me/tracks?limit=1");
   return [
-    { id: "liked", name: "", image: "", total: liked?.total ?? null, full: true },
+    { id: "liked", name: "", image: "", total: liked?.total ?? null },
     ...(list?.items ?? [])
       .filter((p): p is NonNullable<typeof p> => !!p?.id)
       .map((p) => ({
@@ -277,7 +272,6 @@ export async function myPlaylists(): Promise<MyPlaylist[]> {
         name: p.name,
         image: p.images?.[0]?.url ?? "",
         total: p.items?.total ?? p.tracks?.total ?? null,
-        full: p.owner?.id === me?.id || !!p.collaborative,
       })),
   ];
 }

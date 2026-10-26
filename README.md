@@ -301,15 +301,15 @@ pnpm typecheck  # checks every package
 
 **Search → Spotify** (or paste a Spotify link into the search box). Musike reads the track list, searches each song on YouTube Music, then opens the result in *Search a list*: check the matches, swap any wrong one, and **Save as playlist**. A match by another artist is left unchecked, so it isn't saved without a look.
 
-**Without an account:** public playlists (first 100 songs), albums and songs. Works everywhere, including the phone apps. Musike reads Spotify's public embed page; nothing is sent to Spotify but the link.
+**Without an account:** public playlists (up to 1,000 songs), albums and songs. Works everywhere, including the phone apps. Musike reads Spotify's public embed page (first 100 songs), then the rest 100 at a time from the web player's API with the anonymous token that page hands out. That API is undocumented: if Spotify changes it, imports stop at 100 songs until Musike is updated.
 
-**With your account** (web and desktop): your own and collaborative playlists in full, private ones, and Liked Songs (up to 1,000 songs per import). Spotify requires a developer app of your own:
+**With your account** (web and desktop): also private playlists and Liked Songs (up to 1,000 songs per import). Spotify requires a developer app of your own:
 
 1. Create an app at [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard), tick **Web API**.
 2. Add the **Redirect URI** that Musike shows on the import page, e.g. `http://127.0.0.1:4180/spotify-callback` (desktop app: `http://127.0.0.1:4280/spotify-callback`). Spotify doesn't accept `localhost`, and other addresses need https.
 3. Paste the app's **Client ID** in Musike and log in.
 
-The login runs entirely in the app (Authorization Code with PKCE, no secret); the token stays in this browser. Since February 2026 Spotify only lets apps in development mode read playlists you own or collaborate on, requires Premium on the app owner's account, and allows 5 users per app. Other people's playlists fall back to the public page (first 100 songs).
+The login runs entirely in the app (Authorization Code with PKCE, no secret); the token stays in this browser. Since February 2026 Spotify only lets apps in development mode read playlists you own or collaborate on, requires Premium on the app owner's account, and allows 5 users per app. Other people's playlists go the no-account way.
 
 ## Moving your library (backup)
 
@@ -386,7 +386,7 @@ Every route answers JSON. Errors look like `{ "error": "message", "code"?: "tool
 | `GET` | `/api/search/albums?q=` | Search albums |
 | `GET` | `/api/suggest?q=` | Search suggestions |
 | `GET` | `/api/radio/:id` | Related tracks (radio) |
-| `GET` | `/api/spotify/:kind/:id` | A public Spotify `playlist` (first 100), `album` or `track` as a track list |
+| `GET` | `/api/spotify/:kind/:id` | A public Spotify `playlist` (up to 1,000 tracks), `album` or `track` as a track list |
 | `GET` | `/api/genres` | YouTube Music genres |
 | `GET` | `/api/genres/:gid` | A genre's artists and songs |
 | `GET` | `/api/genres/:gid/artists?offset=` | More of a genre's artists ("Load more") |
