@@ -155,6 +155,7 @@ export const pt: Messages = {
     addedToQueue: (title) => `"${title}" adicionada à fila`,
     startingRadio: (title) => `Montando rádio de "${title}"`,
     cantPlay: (title, reason) => `Não foi possível tocar "${title}". ${reason}`,
+    switchFailed: "Não foi possível carregar a outra versão. Continuamos com esta.",
     aTrack: "esta faixa",
     browserCantPlay: "O navegador não conseguiu reproduzir este formato.",
     serverDown: "Servidor do Musike inacessível. Ele está rodando?",

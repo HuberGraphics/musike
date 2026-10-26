@@ -161,6 +161,7 @@ export const en = {
     addedToQueue: (title: string) => `"${title}" added to the queue`,
     startingRadio: (title: string) => `Building radio from "${title}"`,
     cantPlay: (title: string, reason: string) => `Couldn't play "${title}". ${reason}`,
+    switchFailed: "Couldn't load the other version. Kept playing this one.",
     aTrack: "this track",
     browserCantPlay: "The browser couldn't play this format.",
     serverDown: "Can't reach the Musike server. Is it running?",

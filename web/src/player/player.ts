@@ -75,6 +75,22 @@ const mediaFor = (k: Kind): HTMLMediaElement => (k === "video" ? videoEl : audio
 
 let loaded: { id: string; kind: Kind; quality: Quality } | null = null;
 let pendingSeek = 0;
+
+/**
+ * Switching between Audio and Video mid-song: the element that was playing keeps going while the other one loads,
+ * muted and parked a little ahead; when the playing one reaches that point, they swap. No gap, nothing repeated.
+ */
+interface Handoff {
+  from: HTMLMediaElement;
+  to: HTMLMediaElement;
+  /** Where `to` is parked, in the song's time. */
+  target: number;
+  tries: number;
+  frame: number;
+}
+let handoff: Handoff | null = null;
+/** How far ahead to park: enough for the seek to buffer, measured from the last attempt. */
+const HANDOFF_LEAD = [0.6, 1.5, 3];
 let token = 0;
 let recordedToken = -1;
 
@@ -152,14 +168,76 @@ export const usePlayer = create<PlayerState>((set, get) => {
     });
   }
 
-  function load(index: number, opts: { autoplay?: boolean; startAt?: number } = {}) {
+  /** Ends a handoff: either swapping (the new element takes over in sync) or abandoning it (another load). */
+  function finishHandoff(swap: boolean) {
+    const h = handoff;
+    if (!h) return;
+    handoff = null;
+    cancelAnimationFrame(h.frame);
+    if (!swap) return;
+    const s = get();
+    // Cut short before the new element was parked (pause or seek right after switching): start it where the old one is.
+    if (h.to.readyState < 1) pendingSeek = h.from.currentTime;
+    else if (h.target === 0 || h.from.currentTime < h.target - 0.05) h.to.currentTime = h.from.currentTime;
+    h.to.muted = s.muted;
+    h.to.volume = s.volume;
+    play(h.to);
+    h.from.pause();
+    h.from.removeAttribute("src");
+    h.from.load();
+    // What the new element's own events would have set while it was parked.
+    if (Number.isFinite(h.to.duration)) set({ duration: h.to.duration });
+    if (h.to === videoEl && videoEl.videoWidth && videoEl.videoHeight) set({ videoAspect: videoEl.videoWidth / videoEl.videoHeight });
+    set({ statusText: null });
+  }
+
+  /** Parks the new element ahead of the playing one, then watches for the moment to swap. */
+  function parkHandoff(h: Handoff) {
+    const lead = HANDOFF_LEAD[Math.min(h.tries, HANDOFF_LEAD.length - 1)]!;
+    h.tries++;
+    h.target = h.from.currentTime + lead;
+    h.to.currentTime = h.target;
+    const onReady = () => {
+      h.to.removeEventListener("canplay", onReady);
+      if (handoff !== h) return;
+      // The playing element got past the parking spot while the new one buffered: park further ahead and retry.
+      if (h.from.currentTime >= h.target - 0.02) {
+        if (h.tries < HANDOFF_LEAD.length) return parkHandoff(h);
+        h.to.currentTime = h.from.currentTime;
+        return finishHandoff(true);
+      }
+      const watch = () => {
+        if (handoff !== h) return;
+        if (h.from.paused || h.from.ended) return finishHandoff(true); // paused meanwhile: just hand over
+        if (h.from.currentTime >= h.target - 0.015) return finishHandoff(true);
+        if (Math.abs(h.from.currentTime - get().position) >= 0.2) set({ position: h.from.currentTime });
+        h.frame = requestAnimationFrame(watch);
+      };
+      h.frame = requestAnimationFrame(watch);
+    };
+    h.to.addEventListener("canplay", onReady);
+  }
+
+  function load(index: number, opts: { autoplay?: boolean; startAt?: number; handoff?: boolean } = {}) {
     const s = get();
     const track = s.queue[index];
     if (!track) return;
+    finishHandoff(false);
 
     // Video mode on a song: find its music video first, then load whichever fits.
     if (needsClipLookup(track, s.preferVideo)) {
       const mine = ++token;
+      // Mid-song, the music keeps playing while the clip is looked up.
+      if (opts.handoff) {
+        set({ statusText: "findingClip" });
+        void lookupClip(track).then(() => {
+          if (mine !== token) return;
+          // No music video: the song simply plays on.
+          if (loaded?.id === track.id && kindFor(track) === loaded.kind) return set({ statusText: null, videoNote: noteFor(track) });
+          load(index, opts);
+        });
+        return;
+      }
       set({
         index,
         status: "loading",
@@ -178,14 +256,39 @@ export const usePlayer = create<PlayerState>((set, get) => {
     const kind = kindFor(track);
     const media = mediaFor(kind);
     const other = mediaFor(kind === "video" ? "audio" : "video");
-    other.pause();
-    if (other.getAttribute("src")) {
-      other.removeAttribute("src");
-      other.load();
+    // Same song, other kind, still playing: let it play on until the new element can take over in sync.
+    const smooth = !!opts.handoff && loaded?.id === track.id && loaded.kind !== kind && !other.paused && !!other.getAttribute("src");
+    if (!smooth) {
+      other.pause();
+      if (other.getAttribute("src")) {
+        other.removeAttribute("src");
+        other.load();
+      }
     }
 
     token++;
     loaded = { id: track.id, kind, quality: s.quality };
+    if (smooth) {
+      set({ mediaKind: kind, videoNote: noteFor(track), buffered: 0, statusText: kind === "video" ? "loadingVideo" : null });
+      handoff = { from: other, to: media, target: 0, tries: 0, frame: 0 };
+      const h = handoff;
+      pendingSeek = 0;
+      media.muted = true;
+      media.volume = s.volume;
+      const begin = (src: string) => {
+        if (handoff !== h) return;
+        media.src = src;
+        const onMeta = () => {
+          media.removeEventListener("loadedmetadata", onMeta);
+          if (handoff === h) parkHandoff(h);
+        };
+        media.addEventListener("loadedmetadata", onMeta);
+      };
+      const source = streamSource(mediaIdFor(track, kind), kind, s.quality);
+      if (typeof source === "string") begin(source);
+      else source.then(begin, () => handoff === h && load(index, { startAt: other.currentTime, autoplay: true }));
+      return;
+    }
     pendingSeek = opts.startAt ?? 0;
     const autoplay = opts.autoplay !== false;
     set({
@@ -304,7 +407,8 @@ export const usePlayer = create<PlayerState>((set, get) => {
   }
 
   function wire(media: HTMLMediaElement) {
-    const isActive = () => activeMedia() === media;
+    // During a handoff the new element is already "active" but silent and parked: it mustn't drive the state yet.
+    const isActive = () => activeMedia() === media && handoff?.to !== media;
     media.addEventListener("loadedmetadata", () => {
       if (!isActive()) return;
       if (pendingSeek > 0) {
@@ -345,7 +449,20 @@ export const usePlayer = create<PlayerState>((set, get) => {
     });
     media.addEventListener("seeked", () => isActive() && syncPositionState());
     media.addEventListener("ended", () => isActive() && onEnded());
-    media.addEventListener("error", () => isActive() && media.getAttribute("src") && onError(media));
+    media.addEventListener("error", () => {
+      // The new kind failed to load mid-switch: stay with the one that's still playing.
+      if (handoff?.to === media) {
+        const h = handoff;
+        finishHandoff(false);
+        media.removeAttribute("src");
+        const kind: Kind = h.from === videoEl ? "video" : "audio";
+        if (loaded) loaded = { ...loaded, kind };
+        set({ mediaKind: kind, statusText: null });
+        toast(getT().player.switchFailed, "error");
+        return;
+      }
+      if (isActive() && media.getAttribute("src")) onError(media);
+    });
   }
   wire(audio);
   wire(videoEl);
@@ -357,10 +474,12 @@ export const usePlayer = create<PlayerState>((set, get) => {
     set({ videoNote: noteFor(track) });
     if (!loaded || loaded.id !== track.id) return;
     const wasPlaying = s.status === "playing" || s.status === "loading";
-    if (needsClipLookup(track, s.preferVideo)) return load(s.index, { startAt: s.position, autoplay: wasPlaying });
+    // The element's own clock, not the stored position (only updated every quarter second or so).
+    const at = activeMedia()?.currentTime || s.position;
+    if (needsClipLookup(track, s.preferVideo)) return load(s.index, { startAt: at, autoplay: wasPlaying, handoff: wasPlaying });
     const kind = kindFor(track);
     if (loaded.kind === kind && (kind === "audio" || loaded.quality === s.quality)) return;
-    load(s.index, { startAt: s.position, autoplay: wasPlaying });
+    load(s.index, { startAt: at, autoplay: wasPlaying, handoff: wasPlaying });
   };
 
   return {
@@ -465,6 +584,7 @@ export const usePlayer = create<PlayerState>((set, get) => {
     },
 
     toggle: () => {
+      if (handoff) finishHandoff(true);
       const s = get();
       const track = s.queue[s.index];
       if (!track) return;
@@ -495,6 +615,7 @@ export const usePlayer = create<PlayerState>((set, get) => {
     },
 
     seek: (seconds) => {
+      if (handoff) finishHandoff(true);
       const t = Math.max(0, Math.min(seconds, get().duration || seconds));
       set({ position: t });
       const media = activeMedia();
