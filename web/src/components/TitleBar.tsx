@@ -1,5 +1,4 @@
 import { desktop } from "../lib/desktop";
-import { cn } from "../lib/format";
 import { selectCurrent, usePlayer } from "../player/player";
 import { Equalizer } from "./Brand";
 
@@ -20,8 +19,8 @@ export function TitleBar() {
         paddingRight: "calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw) + 12px)",
       }}
     >
-      {/* As wide as the sidebar below, so the playing track lines up with the page content, like T3's breadcrumb. */}
-      <span aria-hidden="true" className={cn("shrink-0 md:w-[68px] wide:w-[248px]", desktop?.platform === "darwin" && "min-w-[84px]")} />
+      {/* Phones and narrow windows have no sidebar: make room for macOS's traffic lights there. */}
+      {desktop?.platform === "darwin" && <span aria-hidden="true" className="w-[84px] shrink-0 md:hidden" />}
       {track && (
         <span className="flex min-w-0 items-center gap-2 px-4 text-xs text-fg-2 md:px-6">
           <Equalizer live={live} className="h-3 shrink-0" />

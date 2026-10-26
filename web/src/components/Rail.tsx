@@ -10,6 +10,7 @@ import {
 import { useState, type ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router";
 import { useT } from "../i18n";
+import { desktop } from "../lib/desktop";
 import { cn } from "../lib/format";
 import { paths } from "../lib/routes";
 import { useAppearance } from "../stores/appearance";
@@ -104,7 +105,15 @@ export function Rail() {
   return (
     <aside className="pane hidden w-[68px] shrink-0 border-r border-line md:flex wide:w-[248px]">
       <div className="flex w-full flex-col overflow-hidden">
-        <div className="relative flex h-14 items-center justify-center wide:justify-start wide:px-4 [@media(max-height:540px)]:h-11">
+        <div
+          className={cn(
+            "relative flex h-14 items-center justify-center wide:justify-start wide:px-4 [@media(max-height:540px)]:h-11",
+            // In the desktop app this is the left end of the window's title bar: as tall, draggable, and clear of
+            // macOS's buttons (the compact rail has no room for them beside the mark, so it drops the mark).
+            desktop && "app-drag h-[env(titlebar-area-height,40px)]! [@media(max-height:540px)]:h-[env(titlebar-area-height,40px)]!",
+            desktop?.platform === "darwin" && "wide:pl-[84px] [&>svg]:invisible wide:[&>svg]:visible",
+          )}
+        >
           <div aria-hidden="true" className="starfield pointer-events-none absolute inset-x-0 top-0 h-20" />
           <LogoMark className="relative size-6 text-fg wide:hidden" />
           <span className="relative hidden wide:block">

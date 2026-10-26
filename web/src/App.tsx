@@ -109,9 +109,12 @@ export default function App() {
 
   return (
     <div className="grain flex h-dvh flex-col bg-bg">
-      {desktop && <TitleBar />}
-      <div className={cn("flex min-h-0 flex-1", desktop && "md:border-t md:border-line")}>
+      {/* The sidebar runs to the top of the window; the desktop title bar only spans the content, like T3's. */}
+      <div className="flex min-h-0 flex-1">
         <Rail />
+        <div className="flex min-w-0 flex-1 flex-col">
+        {desktop && <TitleBar />}
+        <div className={cn("flex min-h-0 flex-1", desktop && "md:border-t md:border-line")}>
         <main
           ref={main}
           className={cn(
@@ -141,6 +144,8 @@ export default function App() {
           )}
         </main>
         {panelOpen && hasTrack && <SidePanel />}
+        </div>
+        </div>
       </div>
 
       {isMd ? (
