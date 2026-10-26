@@ -6,14 +6,14 @@ import { ALBUM_ID, album, ARTIST_ID, artist, findAlbum, findArtist, GENRE_ID, ge
 import { config } from "./config.js";
 import * as library from "./library.js";
 import { fileStorage } from "./libraryFile.js";
-import { findVideoFor, radio, search, suggestions } from "./search.js";
+import { findVideoFor, radio, search, suggestions, withClient } from "./search.js";
 import { spotifyList, type SpotifyKind } from "./spotify.js";
 import { proxyStream, serveFile } from "./stream.js";
 import { langOf, msg, tr } from "./i18n.js";
 import { presentJob, startJob, systemInfo, type Channel } from "./system.js";
 import { refreshTools, type Tools } from "./tools.js";
 import { HttpError, VIDEO_ID } from "./types.js";
-import { downloadHd, pruneCache, resolveStreams } from "./ytdlp.js";
+import { downloadHd, pruneCache, resolveAudio, resolveStreams } from "./ytdlp.js";
 
 function videoId(params: unknown): string {
   const id = (params as { id?: string }).id ?? "";
@@ -146,7 +146,10 @@ export async function startServer(opts: StartOptions = {}): Promise<RunningServe
 
   /** Resolves stream URLs ahead of time so the next track starts instantly. */
   app.post("/api/prepare/:id", async (req) => {
-    const r = await resolveStreams(videoId(req.params));
+    const id = videoId(req.params);
+    // The full extraction (video formats) keeps going in the background for video mode and HD.
+    resolveStreams(id).catch(() => {});
+    const r = await resolveAudio(id);
     return { id: r.id, title: r.title, duration: r.duration, hasSdVideo: !!r.video };
   });
 
@@ -238,6 +241,8 @@ export async function startServer(opts: StartOptions = {}): Promise<RunningServe
   await app.listen({ port, host });
 
   pruneCache().catch(() => {});
+  // Open YouTube's API session now, so the first song played doesn't wait for it.
+  withClient(async () => undefined).catch(() => {});
   return { port, tools: found, close: () => app.close() };
 }
 

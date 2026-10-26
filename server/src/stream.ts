@@ -4,7 +4,7 @@ import { Readable } from "node:stream";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { msg } from "./i18n.js";
 import { HttpError } from "./types.js";
-import { invalidate, resolveStreams, type StreamFormat } from "./ytdlp.js";
+import { invalidate, resolveAudio, resolveStreams, type StreamFormat } from "./ytdlp.js";
 
 const PASS_HEADERS = ["content-length", "content-range", "accept-ranges", "last-modified"];
 
@@ -15,7 +15,8 @@ const PASS_HEADERS = ["content-length", "content-range", "accept-ranges", "last-
 export async function proxyStream(req: FastifyRequest, reply: FastifyReply, id: string, kind: "audio" | "video") {
   const pick = async (fresh: boolean): Promise<StreamFormat> => {
     if (fresh) invalidate(id);
-    const resolved = await resolveStreams(id);
+    // Audio takes the fast direct route; if YouTube then refuses that URL, the retry goes through yt-dlp.
+    const resolved = kind === "audio" && !fresh ? await resolveAudio(id) : await resolveStreams(id);
     const fmt = kind === "audio" ? resolved.audio : resolved.video;
     if (!fmt) throw new HttpError(404, msg("noSdVideo"));
     return fmt;

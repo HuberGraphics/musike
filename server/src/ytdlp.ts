@@ -144,10 +144,13 @@ const resolvedAt = new Map<string, Resolved>();
 let directClients: string[] | null = null;
 let directClientsAt = 0;
 
-async function clientsForDirect(): Promise<string[]> {
+/** The current list right away; a stale one is refreshed in the background, so no song waits on GitHub. */
+function clientsForDirect(): string[] {
   if (Date.now() - directClientsAt > 6 * 3600_000) {
     directClientsAt = Date.now();
-    directClients = (await fetchRemoteClients()) ?? directClients;
+    void fetchRemoteClients().then((remote) => {
+      if (remote) directClients = remote;
+    });
   }
   return directClients ?? DEFAULT_CLIENTS;
 }
@@ -161,7 +164,7 @@ async function resolveDirect(id: string, ytdlpError: unknown): Promise<Resolved>
   // Removed, private or age-restricted videos won't play any other way either.
   if (ytdlpError instanceof HttpError && (ytdlpError.status === 403 || ytdlpError.status === 404)) throw ytdlpError;
   try {
-    const direct = await directAudio(id, await clientsForDirect());
+    const direct = await directAudio(id, clientsForDirect());
     return {
       id,
       title: direct.title,
@@ -208,6 +211,42 @@ export function resolveStreams(id: string): Promise<Resolved> {
 
 export function invalidate(id: string) {
   resolvedAt.delete(id);
+  audioAt.delete(id);
+}
+
+const audioAt = new Map<string, Resolved>();
+const audioInflight = new Map<string, Promise<Resolved>>();
+
+/**
+ * Just the audio, as fast as possible: asked straight from YouTube's API (about 0.1 s), with yt-dlp (about 2 s:
+ * a new process and a full extraction) as the fallback. Video, and HD, stay yt-dlp's job (resolveStreams).
+ */
+export function resolveAudio(id: string): Promise<Resolved> {
+  const full = resolvedAt.get(id);
+  if (full && full.expiresAt > Date.now()) return Promise.resolve(full);
+  const done = audioAt.get(id);
+  if (done && done.expiresAt > Date.now()) return Promise.resolve(done);
+  const inflight = audioInflight.get(id);
+  if (inflight) return inflight;
+
+  const job = directAudio(id, clientsForDirect())
+    .then(
+      (direct): Resolved => ({
+        id,
+        title: direct.title,
+        duration: direct.duration,
+        audio: { formatId: "direct", url: direct.url, headers: {}, mime: direct.mime },
+        expiresAt: direct.expiresAt - 10 * 60_000,
+      }),
+    )
+    .then((resolved) => {
+      audioAt.set(id, resolved);
+      return resolved;
+    })
+    .catch(() => resolveStreams(id))
+    .finally(() => audioInflight.delete(id));
+  audioInflight.set(id, job);
+  return job;
 }
 
 const downloads = new Map<string, Promise<string>>();
