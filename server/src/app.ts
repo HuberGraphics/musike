@@ -223,6 +223,12 @@ export async function startServer(opts: StartOptions = {}): Promise<RunningServe
     return library.addToPlaylist((req.params as { pid: string }).pid, tracks);
   });
 
+  /** The playlist's new track order, as `{ ids: [...] }`. */
+  app.put("/api/playlists/:pid/order", async (req) => {
+    const { ids } = (req.body ?? {}) as { ids?: unknown };
+    return library.reorderPlaylist((req.params as { pid: string }).pid, Array.isArray(ids) ? ids.slice(0, 5000) : ids);
+  });
+
   app.delete("/api/playlists/:pid/tracks/:id", async (req) =>
     library.removeFromPlaylist((req.params as { pid: string }).pid, videoId(req.params)),
   );

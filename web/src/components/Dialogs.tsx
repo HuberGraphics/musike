@@ -4,7 +4,7 @@ import { useT, type Messages } from "../i18n";
 import { cn } from "../lib/format";
 import { useLibrary } from "../stores/library";
 import { useUi } from "../stores/ui";
-import { Artwork } from "./Artwork";
+import { Cover } from "./Cover";
 import { Modal } from "./Modal";
 
 export function AddToPlaylistDialog() {
@@ -80,8 +80,10 @@ export function AddToPlaylistDialog() {
             <span className="font-medium">{t.nav.newPlaylist}</span>
           </button>
           {playlists.map((p) => {
-            // Done only when it already has every track being added.
-            const has = !!tracks && tracks.every((x) => p.tracks.some((t) => t.id === x.id));
+            // Done only when it already has every track being added; otherwise say how many it would skip.
+            const there = tracks ? new Set(tracks.filter((x) => p.tracks.some((t) => t.id === x.id)).map((x) => x.id)).size : 0;
+            const wanted = tracks ? new Set(tracks.map((x) => x.id)).size : 0;
+            const has = wanted > 0 && there === wanted;
             return (
               <button
                 key={p.id}
@@ -94,10 +96,18 @@ export function AddToPlaylistDialog() {
                 }}
                 className={cn("flex items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-surface-3", has && "opacity-60")}
               >
-                <Artwork src={p.tracks[0]?.thumb} className="size-11 rounded-[10px]" />
+                <Cover kind="playlist" tracks={p.tracks} className="size-11 shrink-0 rounded-[10px]" iconSize={20} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{p.name}</span>
-                  <span className="block text-sm text-fg-2">{t.common.tracks(p.tracks.length)}</span>
+                  <span className={cn("block truncate text-sm", there ? "text-accent-text" : "text-fg-2")}>
+                    {has
+                      ? wanted === 1
+                        ? t.dialogs.alreadyInPlaylist
+                        : t.dialogs.allAlreadyInPlaylist
+                      : there
+                        ? t.dialogs.someAlreadyIn(there, wanted)
+                        : t.common.tracks(p.tracks.length)}
+                  </span>
                 </span>
                 {has && <CheckIcon size={18} className="text-accent-text" />}
               </button>

@@ -1,5 +1,14 @@
-import { DotsThreeIcon, MagnifyingGlassIcon, PauseIcon, PencilSimpleIcon, PlayIcon, ShuffleIcon, TrashIcon } from "@phosphor-icons/react";
-import { useState } from "react";
+import {
+  DotsThreeIcon,
+  MagnifyingGlassIcon,
+  PauseIcon,
+  PencilSimpleIcon,
+  PlayIcon,
+  ShuffleIcon,
+  SortAscendingIcon,
+  TrashIcon,
+} from "@phosphor-icons/react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { Cover, type CoverKind } from "../components/Cover";
 import { NamePlaylistDialog } from "../components/Dialogs";
@@ -10,12 +19,56 @@ import { TrackList } from "../components/TrackList";
 import { useT } from "../i18n";
 import { shuffled } from "../lib/format";
 import { paths } from "../lib/routes";
-import type { Track } from "../lib/types";
+import type { Playlist, Track } from "../lib/types";
 import { usePlayer } from "../player/player";
 import { useLibrary } from "../stores/library";
 
 interface Props {
   kind: CoverKind;
+}
+
+const SORTS = ["custom", "title", "artist", "added"] as const;
+type Sort = (typeof SORTS)[number];
+const SORT_KEY = "musike:playlist-sort";
+
+/** Each playlist remembers how it was sorted, on this device. */
+function readSorts(): Record<string, Sort> {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SORT_KEY) ?? "{}") as Record<string, unknown>;
+    return Object.fromEntries(Object.entries(saved).filter((e): e is [string, Sort] => SORTS.includes(e[1] as Sort)));
+  } catch {
+    return {};
+  }
+}
+
+function usePlaylistSort(id: string | undefined) {
+  const [sorts, setSorts] = useState(readSorts);
+  const sort: Sort = (id && sorts[id]) || "custom";
+  const setSort = (next: Sort) => {
+    if (!id) return;
+    const all = { ...readSorts(), [id]: next };
+    if (next === "custom") delete all[id];
+    setSorts(all);
+    try {
+      localStorage.setItem(SORT_KEY, JSON.stringify(all));
+    } catch {
+      /* private mode */
+    }
+  };
+  return [sort, setSort] as const;
+}
+
+const byText = (a: string, b: string) => a.localeCompare(b, undefined, { sensitivity: "base", numeric: true });
+
+/** A view of the playlist; its saved (custom) order never changes. */
+function sortTracks(p: Playlist, sort: Sort): Track[] {
+  if (sort === "custom") return p.tracks;
+  const list = [...p.tracks];
+  if (sort === "title") return list.sort((a, b) => byText(a.title, b.title));
+  if (sort === "artist") return list.sort((a, b) => byText(a.artist, b.artist) || byText(a.album ?? "", b.album ?? "") || byText(a.title, b.title));
+  // Tracks saved before Musike kept the date count as added when the playlist was made, in their own order.
+  const added = (t: Track) => p.added?.[t.id] ?? p.createdAt;
+  return list.sort((a, b) => added(b) - added(a));
 }
 
 /** Playlist, Favorites and History share one layout. */
@@ -33,7 +86,9 @@ export default function Collection({ kind }: Props) {
   const t = useT();
 
   const playlist = kind === "playlist" ? lib.playlists.find((p) => p.id === id) : undefined;
-  const tracks: Track[] = kind === "favorites" ? lib.favorites : kind === "history" ? lib.history : playlist?.tracks ?? [];
+  const [sort, setSort] = usePlaylistSort(playlist?.id);
+  const sorted = useMemo(() => (playlist ? sortTracks(playlist, sort) : []), [playlist, sort]);
+  const tracks: Track[] = kind === "favorites" ? lib.favorites : kind === "history" ? lib.history : sorted;
   const name = kind === "favorites" ? t.nav.favorites : kind === "history" ? t.nav.recentlyPlayed : playlist?.name ?? "";
   const label =
     kind === "playlist" ? t.collection.labelPlaylist : kind === "favorites" ? t.collection.labelFavorites : t.collection.labelHistory;
@@ -71,7 +126,7 @@ export default function Collection({ kind }: Props) {
         <div className="relative flex flex-col items-center gap-5 px-4 pt-2 pb-6 md:flex-row md:items-end md:gap-6 md:px-6 md:pt-10">
           <Cover
             kind={kind}
-            tracks={tracks}
+            tracks={playlist?.tracks ?? tracks}
             iconSize={64}
             className="size-44 shrink-0 rounded-xl shadow-[0_24px_60px_rgb(0_0_0/0.4)] md:size-52"
           />
@@ -111,11 +166,34 @@ export default function Collection({ kind }: Props) {
             <DotsThreeIcon size={26} weight="bold" />
           </IconButton>
         )}
+        {kind === "playlist" && tracks.length > 1 && (
+          <label className="ml-auto flex items-center gap-2 text-sm text-fg-2">
+            <SortAscendingIcon size={18} aria-hidden="true" />
+            <span className="sr-only">{t.collection.sortBy}</span>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as Sort)}
+              className="h-9 cursor-pointer rounded-full bg-surface-1 px-3 text-sm font-medium text-fg ring-1 ring-line hover:bg-surface-3 focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              {SORTS.map((s) => (
+                <option key={s} value={s}>
+                  {t.collection.sort[s]}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
 
       <div className="px-2 md:px-3">
         {tracks.length > 0 ? (
-          <TrackList tracks={tracks} playlistId={playlist?.id} showAlbum />
+          <TrackList
+            tracks={tracks}
+            playlistId={playlist?.id}
+            showAlbum
+            // Dragging only makes sense in the playlist's own order.
+            onReorder={playlist && sort === "custom" ? (next) => void lib.reorderPlaylist(playlist.id, next) : undefined}
+          />
         ) : (
           <EmptyState
             icon={<MagnifyingGlassIcon size={28} />}

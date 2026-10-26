@@ -2,6 +2,7 @@ import { ClockCounterClockwiseIcon, HeartIcon, MagnifyingGlassIcon, PlayIcon } f
 import type { ReactNode } from "react";
 import { Link, useNavigate } from "react-router";
 import { Artwork } from "../components/Artwork";
+import { Cover } from "../components/Cover";
 import { LogoMark } from "../components/Brand";
 import { PageHeader, Section } from "../components/Page";
 import { TrackList, TrackListSkeleton } from "../components/TrackList";
@@ -121,7 +122,7 @@ export default function Home() {
                 to={paths.playlist(p.id)}
                 label={p.name}
                 tracks={p.tracks}
-                cover={<Artwork src={p.tracks[0]?.thumb} className="size-full" />}
+                cover={<Cover kind="playlist" tracks={p.tracks} className="size-full" iconSize={24} />}
               />
             ))}
           </div>}
