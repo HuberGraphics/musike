@@ -77,6 +77,10 @@ export function useShortcuts() {
         case "Q":
           ui.togglePanel("queue");
           break;
+        case "y":
+        case "Y":
+          ui.togglePanel("lyrics");
+          break;
         case "/":
           handled();
           navigate(paths.search);

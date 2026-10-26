@@ -1,4 +1,4 @@
-import { KeyboardIcon, QueueIcon, SidebarSimpleIcon } from "@phosphor-icons/react";
+import { KeyboardIcon, MicrophoneIcon, QueueIcon, SidebarSimpleIcon } from "@phosphor-icons/react";
 import { cn } from "../lib/format";
 import { useT } from "../i18n";
 import { selectCurrent, usePlayer, useStatusText } from "../player/player";
@@ -53,6 +53,14 @@ export function PlayerBar() {
 
         <div className="flex items-center justify-end gap-1">
           <ModeSwitch className="max-2xl:hidden" />
+          <IconButton
+            label={t.player.lyrics}
+            size="sm"
+            active={panelOpen && panelTab === "lyrics"}
+            onClick={() => togglePanel("lyrics")}
+          >
+            <MicrophoneIcon size={18} />
+          </IconButton>
           <IconButton
             label={t.player.queue}
             size="sm"

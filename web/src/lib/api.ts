@@ -10,7 +10,7 @@ import {
   type SystemJob,
   type SystemMedia,
 } from "./apiTypes";
-import type { AlbumCard, AlbumPage, ArtistPage, Genre, GenreArtist, GenrePage, Library, Playlist, SpotifyKind, SpotifyList, Track } from "./types";
+import type { AlbumCard, AlbumPage, ArtistPage, Genre, GenreArtist, GenrePage, Library, Lyrics, Playlist, SpotifyKind, SpotifyList, Track } from "./types";
 
 // The HTTP backend: the Musike server (web app, desktop app). The Android build swaps this module for native/api.ts.
 export * from "./apiTypes";
@@ -58,6 +58,11 @@ export const api: MusikeApi = {
     request<{ track: Track | null }>(
       `/api/video-for/${t.id}?${new URLSearchParams({ title: t.title, artist: t.artist, duration: String(t.duration || "") })}`,
     ).then((r) => r.track),
+  lyrics: (t: Track, signal?: AbortSignal) =>
+    request<{ lyrics: Lyrics | null }>(
+      `/api/lyrics/${t.id}?${new URLSearchParams({ title: t.title, artist: t.artist, duration: String(t.duration || ""), kind: t.kind })}`,
+      { signal },
+    ).then((r) => r.lyrics),
   prepare: (id: string, signal?: AbortSignal) =>
     request<Prepared>(`/api/prepare/${id}`, {
       method: "POST",

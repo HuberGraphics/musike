@@ -61,6 +61,7 @@ Musike started from the idea behind the old Discord music bots: a server that fe
 - **Albums:** open any album and play it in its original order, shuffle it, or save it as a playlist in one click
 - **Import from Spotify:** paste a Spotify playlist, album or song link (or log in for your own playlists and Liked Songs). Musike finds every song on YouTube Music and saves them as a playlist. [How it works](#importing-from-spotify)
 - **Search a list:** type several songs separated by commas ("Bohemian Rhapsody, Hotel California, …"). Musike finds each one, picks the best match (you can swap it) and lets you play, favorite or send them all to a playlist
+- **Synced lyrics** that follow the song line by line (tap a line to jump there), from [LRCLIB](https://lrclib.net)
 - Queue with play next, shuffle and repeat (queue or track)
 - **Autoplay radio:** when the queue ends, it keeps going with similar songs
 - Instant seeking (HTTP Range streaming) and the next track preloaded
@@ -358,6 +359,7 @@ On import the server validates every track (YouTube ID, sizes, `https://` images
 | `V` | Switch Audio / Video |
 | `F` | Cinema mode |
 | `Q` | Queue |
+| `Y` | Lyrics |
 | `/` | Search |
 | `?` | Shortcut list |
 
