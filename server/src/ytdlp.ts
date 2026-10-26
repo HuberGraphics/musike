@@ -4,7 +4,7 @@ import { mkdir, readdir, rename, rm, stat, utimes } from "node:fs/promises";
 import path from "node:path";
 import { ensureComponent } from "./bootstrap.js";
 import { config } from "./config.js";
-import { DEFAULT_CLIENTS, directAudio, fetchRemoteClients } from "./directAudio.js";
+import { DEFAULT_CLIENTS, directAudio, fetchRemoteClients, loudness } from "./directAudio.js";
 import { tools } from "./tools.js";
 import { msg } from "./i18n.js";
 import { HttpError } from "./types.js";
@@ -208,6 +208,9 @@ export function resolveStreams(id: string): Promise<Resolved> {
   cache.set(id, job);
   return job;
 }
+
+/** See directAudio.ts: dB above the -14 LUFS reference, or null. */
+export const loudnessOf = (id: string) => loudness(id, clientsForDirect());
 
 export function invalidate(id: string) {
   resolvedAt.delete(id);

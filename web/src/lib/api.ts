@@ -66,6 +66,8 @@ export const api: MusikeApi = {
   spotify: (kind: SpotifyKind, id: string, signal?: AbortSignal) =>
     request<SpotifyList>(`/api/spotify/${kind}/${encodeURIComponent(id)}`, { signal }),
 
+  loudness: (id: string) => request<{ db: number | null }>(`/api/loudness/${id}`).then((r) => r.db),
+
   library: () => request<Library>("/api/library"),
   addFavorite: (t: Track) => request<{ favorites: Track[] }>(`/api/favorites/${t.id}`, { method: "PUT", json: t }),
   addFavorites: (tracks: Track[]) => request<{ favorites: Track[] }>("/api/favorites", { method: "POST", json: { tracks } }),
@@ -106,9 +108,10 @@ export const systemMedia: SystemMedia | null = null;
 
 /**
  * What this build can do. The Android build has no video yet, no yt-dlp to manage, retries expired streams, and
- * can't log in to Spotify (its web view's address isn't one Spotify accepts as a redirect).
+ * can't log in to Spotify (its web view's address isn't one Spotify accepts as a redirect), nor normalize loudness
+ * (its streams come straight from YouTube, and Web Audio only processes same-origin media).
  */
-export const capabilities = { video: true, engineSettings: true, retryOnError: false, spotifyLogin: true };
+export const capabilities = { video: true, engineSettings: true, retryOnError: false, spotifyLogin: true, normalize: true };
 
 /** Media elements hide the HTTP error body; fetch it to show the real reason. */
 export async function explainStreamError(url: string): Promise<{ message: string; code?: ErrorCode }> {

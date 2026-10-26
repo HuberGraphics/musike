@@ -58,7 +58,7 @@ export function AccentPicker() {
   );
 }
 
-function SwitchRow({ label, body, checked, onChange }: { label: string; body?: string; checked: boolean; onChange: (on: boolean) => void }) {
+export function SwitchRow({ label, body, checked, onChange }: { label: string; body?: string; checked: boolean; onChange: (on: boolean) => void }) {
   return (
     <label className="flex cursor-pointer items-center justify-between gap-3 px-3 py-2.5">
       <span>

@@ -362,6 +362,9 @@ export const pt: Messages = {
 
   settings: {
     title: "Ajustes",
+    playback: "Reprodução",
+    normalize: "Normalizar volume",
+    normalizeBody: "Todas as músicas e vídeos no mesmo volume (-14 LUFS, como Spotify e YouTube)",
     appearance: "Aparência",
     theme: "Tema",
     dark: "Escuro",

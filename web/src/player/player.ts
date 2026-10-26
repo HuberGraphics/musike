@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { getT, useT } from "../i18n";
 import { api, capabilities, explainStreamError, streamSource, systemMedia, type ApiError, type ErrorCode } from "../lib/api";
+import { normalize, resumeAudio } from "./loudness";
 import { createAudio } from "../lib/audio";
 import { shuffled } from "../lib/format";
 import type { Track } from "../lib/types";
@@ -39,6 +40,8 @@ interface PlayerState {
   preferVideo: boolean;
   quality: Quality;
   autoRadio: boolean;
+  /** Every song and video at the same loudness (see loudness.ts). */
+  normalize: boolean;
 
   playList: (tracks: Track[], start?: number) => void;
   playTrack: (track: Track) => void;
@@ -59,6 +62,7 @@ interface PlayerState {
   setPreferVideo: (on: boolean) => void;
   setQuality: (q: Quality) => void;
   setAutoRadio: (on: boolean) => void;
+  setNormalize: (on: boolean) => void;
 }
 
 // Media elements live outside React so playback survives any re-render or route change.
@@ -108,6 +112,7 @@ interface Saved {
   preferVideo: boolean;
   quality: Quality;
   autoRadio: boolean;
+  normalize: boolean;
 }
 
 function readSaved(): Partial<Saved> {
@@ -162,6 +167,7 @@ export const usePlayer = create<PlayerState>((set, get) => {
   const activeMedia = (): HTMLMediaElement | null => (loaded ? mediaFor(loaded.kind) : null);
 
   function play(media: HTMLMediaElement) {
+    resumeAudio();
     media.play().catch((err: DOMException) => {
       if (err.name === "AbortError") return; // src changed mid-start
       if (err.name === "NotAllowedError") set({ status: "paused" }); // autoplay blocked
@@ -275,6 +281,7 @@ export const usePlayer = create<PlayerState>((set, get) => {
       pendingSeek = 0;
       media.muted = true;
       media.volume = s.volume;
+      void normalize(media, mediaIdFor(track, kind), s.normalize);
       const begin = (src: string) => {
         if (handoff !== h) return;
         media.src = src;
@@ -304,6 +311,7 @@ export const usePlayer = create<PlayerState>((set, get) => {
     });
     media.volume = s.volume;
     media.muted = s.muted;
+    void normalize(media, mediaIdFor(track, kind), s.normalize);
     const start = (src: string) => {
       media.src = src;
       if (autoplay) play(media);
@@ -502,6 +510,7 @@ export const usePlayer = create<PlayerState>((set, get) => {
     preferVideo: capabilities.video && (saved.preferVideo ?? false),
     quality: saved.quality ?? "sd",
     autoRadio: saved.autoRadio ?? true,
+    normalize: saved.normalize ?? true,
 
     playList: (tracks, start = 0) => {
       if (!tracks.length) return;
@@ -674,6 +683,14 @@ export const usePlayer = create<PlayerState>((set, get) => {
     },
 
     setAutoRadio: (autoRadio) => set({ autoRadio }),
+
+    setNormalize: (on) => {
+      set({ normalize: on });
+      const s = get();
+      const track = s.queue[s.index];
+      const media = activeMedia();
+      if (track && media && loaded?.id === track.id) void normalize(media, mediaIdFor(track, loaded.kind), on);
+    },
   };
 });
 
@@ -700,6 +717,7 @@ function persist() {
     preferVideo: s.preferVideo,
     quality: s.quality,
     autoRadio: s.autoRadio,
+    normalize: s.normalize,
   };
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));

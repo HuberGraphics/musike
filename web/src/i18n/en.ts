@@ -368,6 +368,9 @@ export const en = {
 
   settings: {
     title: "Settings",
+    playback: "Playback",
+    normalize: "Normalize volume",
+    normalizeBody: "Every song and video at the same loudness (-14 LUFS, like Spotify and YouTube)",
     appearance: "Appearance",
     theme: "Theme",
     dark: "Dark",

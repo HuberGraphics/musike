@@ -14,7 +14,9 @@ import { cn } from "../lib/format";
 import { useSystem } from "../stores/system";
 import { useUi } from "../stores/ui";
 import { BackupSection } from "./BackupSection";
-import { AccentPicker, LayoutSection } from "./CustomizeSection";
+import { canNormalize } from "../player/loudness";
+import { usePlayer } from "../player/player";
+import { AccentPicker, LayoutSection, SwitchRow } from "./CustomizeSection";
 import { Modal } from "./Modal";
 
 function Segmented<T extends string>({
@@ -71,6 +73,20 @@ function Dependency({ name, role, path, fix }: { name: string; role: string; pat
         </span>
       </span>
     </li>
+  );
+}
+
+function PlaybackSection() {
+  const t = useT();
+  const on = usePlayer((s) => s.normalize);
+  const setNormalize = usePlayer((s) => s.setNormalize);
+  return (
+    <section className="flex flex-col gap-2">
+      <h3 className="text-xs font-medium text-fg-3">{t.settings.playback}</h3>
+      <div className="rounded-xl bg-surface-1 ring-1 ring-line">
+        <SwitchRow label={t.settings.normalize} body={t.settings.normalizeBody} checked={on} onChange={setNormalize} />
+      </div>
+    </section>
   );
 }
 
@@ -151,6 +167,8 @@ export function SettingsDialog() {
             options={LANGUAGES.map(({ id, name }): [Lang, ReactNode] => [id, <span lang={id}>{name}</span>])}
           />
         </section>
+
+        {canNormalize() && <PlaybackSection />}
 
         <LayoutSection />
 

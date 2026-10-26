@@ -13,7 +13,7 @@ import { langOf, msg, tr } from "./i18n.js";
 import { presentJob, startJob, systemInfo, type Channel } from "./system.js";
 import { refreshTools, type Tools } from "./tools.js";
 import { HttpError, VIDEO_ID } from "./types.js";
-import { downloadHd, pruneCache, resolveAudio, resolveStreams } from "./ytdlp.js";
+import { downloadHd, loudnessOf, pruneCache, resolveAudio, resolveStreams } from "./ytdlp.js";
 
 function videoId(params: unknown): string {
   const id = (params as { id?: string }).id ?? "";
@@ -152,6 +152,9 @@ export async function startServer(opts: StartOptions = {}): Promise<RunningServe
     const r = await resolveAudio(id);
     return { id: r.id, title: r.title, duration: r.duration, hasSdVideo: !!r.video };
   });
+
+  /** How loud a video is compared to the -14 LUFS reference, for the player's volume normalization. */
+  app.get("/api/loudness/:id", async (req) => ({ db: await loudnessOf(videoId(req.params)) }));
 
   app.get("/api/stream/:id/audio", (req, reply) => proxyStream(req, reply, videoId(req.params), "audio"));
 

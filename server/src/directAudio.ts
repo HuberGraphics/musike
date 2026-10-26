@@ -23,6 +23,36 @@ export interface DirectAudio {
   expiresAt: number;
 }
 
+/**
+ * How much louder than YouTube's reference (-14 LUFS, the level Spotify and YouTube normalize to) a video's audio
+ * is, in dB: +7 means 7 dB too loud. YouTube measures every upload and sends it with the streams.
+ */
+const loudnessCache = new Map<string, number | null>();
+
+function loudnessFrom(info: any): number | null {
+  const formats: any[] = info?.streaming_data?.adaptive_formats ?? [];
+  const db = formats.find((f) => f.has_audio && typeof f.loudness_db === "number")?.loudness_db;
+  if (typeof db === "number" && Number.isFinite(db)) return db;
+  const perceptual = info?.player_config?.audio_config?.perceptual_loudness_db;
+  return typeof perceptual === "number" && Number.isFinite(perceptual) ? perceptual + 14 : null;
+}
+
+/** A video's loudness (see above), or null when YouTube doesn't say. Asked once per video. */
+export async function loudness(id: string, clients: string[]): Promise<number | null> {
+  if (loudnessCache.has(id)) return loudnessCache.get(id)!;
+  for (const client of clients) {
+    try {
+      const info: any = await withClient((yt) => yt.getBasicInfo(id, { client: client as never }));
+      const db = loudnessFrom(info);
+      loudnessCache.set(id, db);
+      return db;
+    } catch {
+      /* next client */
+    }
+  }
+  return null; // not remembered: a network hiccup shouldn't stick
+}
+
 export const validClients = (v: unknown): string[] | null =>
   Array.isArray(v) && v.length > 0 && v.every((c) => typeof c === "string" && /^[A-Z_]{2,30}$/.test(c)) ? (v as string[]) : null;
 
@@ -58,6 +88,7 @@ export async function directAudio(id: string, clients: string[], lang?: Lang): P
         (a, b) => Number(b.mime_type?.startsWith("audio/mp4")) - Number(a.mime_type?.startsWith("audio/mp4")) || (b.bitrate ?? 0) - (a.bitrate ?? 0),
       )[0];
       if (!best) continue;
+      loudnessCache.set(id, loudnessFrom(info));
       const expire = Number(new URL(best.url).searchParams.get("expire")) * 1000;
       return {
         url: best.url,

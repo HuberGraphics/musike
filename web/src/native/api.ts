@@ -93,6 +93,7 @@ export const api: MusikeApi = {
       const r = await resolveAudio(id);
       return { id, title: r.title, duration: r.duration, hasSdVideo: false };
     }, signal),
+  loudness: async () => null,
   spotify: (kind, id, signal) => call(() => spotifyList(kind, id), signal),
 
   library: () => call(() => library.getLibrary()),
@@ -135,4 +136,4 @@ export async function saveFile(name: string, text: string) {
 
 export const systemMedia = media;
 
-export const capabilities = { video: false, engineSettings: false, retryOnError: true, spotifyLogin: false };
+export const capabilities = { video: false, engineSettings: false, retryOnError: true, spotifyLogin: false, normalize: false };
