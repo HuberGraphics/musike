@@ -179,6 +179,7 @@ export const en = {
     tabQueue: "Queue",
     panel: "Now playing and queue",
     closePanel: "Close panel",
+    resize: "Resize panel (double-click to reset)",
     backToPlayer: "Back to the player",
     showQueue: "Show queue",
   },

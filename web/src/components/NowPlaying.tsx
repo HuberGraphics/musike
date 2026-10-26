@@ -7,7 +7,7 @@ import {
   XIcon,
 } from "@phosphor-icons/react";
 import { AnimatePresence, motion, useDragControls, useReducedMotion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { useT } from "../i18n";
 import { cn } from "../lib/format";
@@ -164,15 +164,101 @@ function PanelTabs({ tab, onTab }: { tab: PanelTab; onTab: (t: PanelTab) => void
   );
 }
 
+const PANEL_WIDTH_KEY = "musike:panel-width";
+const PANEL_DEFAULT = 360;
+const PANEL_MIN = 300;
+/** Never narrower than this is left for the page: the panel can't squeeze the content away. */
+const CONTENT_MIN = 560;
+
+const clampPanel = (w: number) => Math.round(Math.max(PANEL_MIN, Math.min(w, 720, window.innerWidth - CONTENT_MIN)));
+
+function readPanelWidth(): number {
+  const saved = Number(localStorage.getItem(PANEL_WIDTH_KEY));
+  return Number.isFinite(saved) && saved > 0 ? saved : PANEL_DEFAULT;
+}
+
+/** The panel's width: dragged from its left edge, remembered per device, kept clear of the content on resize. */
+function usePanelWidth() {
+  const [width, setWidth] = useState(() => clampPanel(readPanelWidth()));
+
+  useEffect(() => {
+    const onResize = () => setWidth(clampPanel(readPanelWidth()));
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const save = (w: number) => {
+    const next = clampPanel(w);
+    setWidth(next);
+    try {
+      localStorage.setItem(PANEL_WIDTH_KEY, String(next));
+    } catch {
+      /* private mode */
+    }
+  };
+  return [width, save] as const;
+}
+
 /** Docked right column (≥1280px). */
 export function SidePanel() {
   const tab = useUi((s) => s.panelTab);
   const openPanel = useUi((s) => s.openPanel);
   const togglePanel = useUi((s) => s.togglePanel);
   const t = useT();
+  const [width, setWidth] = usePanelWidth();
+  const [dragging, setDragging] = useState(false);
+
+  const startDrag = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const handle = e.currentTarget;
+    handle.setPointerCapture(e.pointerId);
+    const startX = e.clientX;
+    const startWidth = width;
+    setDragging(true);
+    const move = (ev: PointerEvent) => setWidth(startWidth + (startX - ev.clientX));
+    const end = () => {
+      setDragging(false);
+      handle.removeEventListener("pointermove", move);
+      handle.removeEventListener("pointerup", end);
+      handle.removeEventListener("pointercancel", end);
+    };
+    handle.addEventListener("pointermove", move);
+    handle.addEventListener("pointerup", end);
+    handle.addEventListener("pointercancel", end);
+  };
+
   return (
-    <aside className="hidden w-[360px] shrink-0 border-l border-line bg-bg xl:flex" aria-label={t.nowPlaying.panel}>
-      <div className="flex w-full flex-col overflow-hidden">
+    <aside
+      className={cn("relative hidden shrink-0 border-l border-line bg-bg xl:flex", dragging && "select-none")}
+      style={{ width }}
+      aria-label={t.nowPlaying.panel}
+    >
+      {/* Drag the left edge to resize; double-click restores the default; arrow keys nudge it. */}
+      <div
+        role="separator"
+        aria-orientation="vertical"
+        aria-label={t.nowPlaying.resize}
+        aria-valuenow={width}
+        aria-valuemin={PANEL_MIN}
+        tabIndex={0}
+        title={t.nowPlaying.resize}
+        onPointerDown={startDrag}
+        onDoubleClick={() => setWidth(PANEL_DEFAULT)}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowLeft") setWidth(width + 16);
+          else if (e.key === "ArrowRight") setWidth(width - 16);
+        }}
+        className="group/resize absolute inset-y-0 -left-[3px] z-20 w-[6px] cursor-col-resize touch-none focus-visible:outline-none"
+      >
+        <span
+          className={cn(
+            "absolute inset-y-0 left-[2px] w-[2px] transition-colors",
+            dragging ? "bg-fg-3" : "bg-transparent group-hover/resize:bg-line-strong group-focus-visible/resize:bg-fg-3",
+          )}
+        />
+      </div>
+      <div className="flex w-full min-w-0 flex-col overflow-hidden">
         <div className="flex h-14 items-center justify-between border-b border-line px-3">
           <PanelTabs tab={tab} onTab={openPanel} />
           <IconButton label={t.nowPlaying.closePanel} size="sm" onClick={() => togglePanel(tab)}>

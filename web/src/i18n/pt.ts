@@ -173,6 +173,7 @@ export const pt: Messages = {
     tabQueue: "Fila",
     panel: "Tocando agora e fila",
     closePanel: "Fechar painel",
+    resize: "Redimensionar painel (clique duplo para voltar)",
     backToPlayer: "Voltar ao player",
     showQueue: "Ver fila",
   },
